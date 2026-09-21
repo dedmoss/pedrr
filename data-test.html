@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Busch League Data Lab</title>
+
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 40px 20px;
+    background: #100914;
+    color: white;
+    font-family: Arial, sans-serif;
+  }
+
+  main {
+    max-width: 1100px;
+    margin: auto;
+  }
+
+  h1 {
+    color: #ff1493;
+    font-size: 48px;
+    margin-bottom: 5px;
+  }
+
+  h2 { color: #ff69bd; }
+
+  .subtitle {
+    color: #cba9d1;
+    margin-bottom: 25px;
+  }
+
+  button {
+    background: #ff1493;
+    color: white;
+    border: 0;
+    padding: 14px 22px;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  #status {
+    margin: 25px 0;
+    padding: 15px;
+    background: #211329;
+    border-radius: 10px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+  }
+
+  .card {
+    background: #211329;
+    border: 1px solid #563163;
+    border-left: 5px solid #ff1493;
+    border-radius: 12px;
+    padding: 18px;
+  }
+
+  .team {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+
+  .manager {
+    color: #ff8bcb;
+    margin-bottom: 12px;
+  }
+
+  .stat {
+    color: #d8c0dd;
+    margin: 5px 0;
+  }
+
+  .champion {
+    border: 2px solid gold;
+  }
+
+  .champion-label {
+    color: gold;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+
+  pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    background: #08050a;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 12px;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+</style>
+</head>
+
+<body>
+
+<main>
+
+<h1>🧪 Busch League Data Lab</h1>
+
+<div class="subtitle">
+  Dissecting the 2025 season for science, statistics and future slander.
+</div>
+
+<button onclick="loadSeason()">ANALYZE 2025</button>
+
+<div id="status">
+  Waiting to violate several principles of responsible data analysis.
+</div>
+
+<h2>Managers & Teams</h2>
+<div id="teams" class="grid"></div>
+
+<h2>Season Structure</h2>
+<div id="structure"></div>
+
+<h2>Raw ESPN Sample</h2>
+<p class="subtitle">
+  This is here so we can see exactly what ESPN sends us.
+</p>
+<pre id="raw">Nothing loaded yet.</pre>
+
+</main>
+
+<script>
+
+const LEAGUE_ID = "530294";
+const YEAR = 2025;
+
+async function loadSeason() {
+
+  const status = document.getElementById("status");
+  const teamsBox = document.getElementById("teams");
+  const structureBox = document.getElementById("structure");
+  const rawBox = document.getElementById("raw");
+
+  status.innerHTML = "🔎 Interrogating ESPN...";
+  teamsBox.innerHTML = "";
+  structureBox.innerHTML = "";
+
+  const url =
+    `https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/${YEAR}/segments/0/leagues/${LEAGUE_ID}` +
+    `?view=mTeam&view=mSettings&view=mMatchup&view=mStandings`;
+
+  try {
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`ESPN returned HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    const members = {};
+
+    (data.members || []).forEach(member => {
+      members[member.id] = {
+        displayName: member.displayName || "",
+        firstName: member.firstName || "",
+        lastName: member.lastName || ""
+      };
+    });
+
+    const teams = data.teams || [];
+    const schedule = data.schedule || [];
+
+    status.innerHTML =
+      `🔥 Loaded ${YEAR}: ${teams.length} teams and ${schedule.length} matchup records.`;
+
+    /*
+      Sort by ESPN's final rank when available.
+    */
+    teams.sort((a, b) =>
+      (a.rankCalculatedFinal || 999) -
+      (b.rankCalculatedFinal || 999)
+    );
+
+    teams.forEach(team => {
+
+      const member = members[team.primaryOwner] || {};
+
+      const realName =
+        `${member.firstName || ""} ${member.lastName || ""}`.trim();
+
+      const managerName =
+        realName ||
+        member.displayName ||
+        "Unknown Manager";
+
+      const record = team.record?.overall || {};
+
+      const wins = record.wins ?? "?";
+      const losses = record.losses ?? "?";
+      const ties = record.ties ?? "?";
+
+      const pointsFor =
+        typeof record.pointsFor === "number"
+          ? record.pointsFor.toFixed(2)
+          : "?";
+
+      const pointsAgainst =
+        typeof record.pointsAgainst === "number"
+          ? record.pointsAgainst.toFixed(2)
+          : "?";
+
+      const finalRank =
+        team.rankCalculatedFinal ??
+        team.playoffSeed ??
+        "?";
+
+      const isChampion =
+        Number(team.rankCalculatedFinal) === 1;
+
+      const card = document.createElement("div");
+
+      card.className =
+        "card" + (isChampion ? " champion" : "");
+
+      card.innerHTML = `
+        ${isChampion
+          ? `<div class="champion-label">🏆 POSSIBLE CHAMPION</div>`
+          : ""
+        }
+
+        <div class="team">
+          ${team.name || "Unnamed Team"}
+        </div>
+
+        <div class="manager">
+          ${managerName}
+        </div>
+
+        <div class="stat">
+          ESPN Team ID: ${team.id}
+        </div>
+
+        <div class="stat">
+          Owner ID: ${team.primaryOwner || "?"}
+        </div>
+
+        <div class="stat">
+          Record: ${wins}-${losses}-${ties}
+        </div>
+
+        <div class="stat">
+          Points For: ${pointsFor}
+        </div>
+
+        <div class="stat">
+          Points Against: ${pointsAgainst}
+        </div>
+
+        <div class="stat">
+          Playoff Seed: ${team.playoffSeed ?? "?"}
+        </div>
+
+        <div class="stat">
+          Final Rank: ${finalRank}
+        </div>
+      `;
+
+      teamsBox.appendChild(card);
+    });
+
+
+    /*
+      Inspect matchup periods.
+
+      This will help us determine where the regular season
+      ends and the playoffs begin.
+    */
+
+    const periods = {};
+
+    schedule.forEach(game => {
+
+      const period = game.matchupPeriodId ?? "unknown";
+
+      if (!periods[period]) {
+        periods[period] = {
+          games: 0,
+          scored: 0
+        };
+      }
+
+      periods[period].games++;
+
+      if (
+        game.home &&
+        game.away &&
+        typeof game.home.totalPoints === "number" &&
+        typeof game.away.totalPoints === "number"
+      ) {
+        periods[period].scored++;
+      }
+
+    });
+
+    let structureHTML = `
+      <div class="card">
+        <div class="stat">
+          Regular Season Matchup Count:
+          ${data.settings?.scheduleSettings?.matchupPeriodCount ?? "?"}
+        </div>
+
+        <div class="stat">
+          Playoff Team Count:
+          ${data.settings?.scheduleSettings?.playoffTeamCount ?? "?"}
+        </div>
+
+        <div class="stat">
+          Total Schedule Objects:
+          ${schedule.length}
+        </div>
+      </div>
+
+      <br>
+
+      <div class="grid">
+    `;
+
+    Object.keys(periods)
+      .sort((a, b) => Number(a) - Number(b))
+      .forEach(period => {
+
+        structureHTML += `
+          <div class="card">
+            <div class="team">Week / Period ${period}</div>
+            <div class="stat">
+              Games: ${periods[period].games}
+            </div>
+            <div class="stat">
+              Scored games: ${periods[period].scored}
+            </div>
+          </div>
+        `;
+
+      });
+
+    structureHTML += "</div>";
+
+    structureBox.innerHTML = structureHTML;
+
+
+    /*
+      Give us one complete team object and a few schedule
+      objects so we can inspect ESPN's structure directly.
+    */
+
+    const sample = {
+      settings: data.settings,
+      sampleMember: data.members?.[0],
+      sampleTeam: data.teams?.[0],
+      firstThreeScheduleObjects: data.schedule?.slice(0, 3)
+    };
+
+    rawBox.textContent =
+      JSON.stringify(sample, null, 2);
+
+  }
+
+  catch(error) {
+
+    console.error(error);
+
+    status.innerHTML =
+      `❌ Something went wrong: ${error.message}`;
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>
