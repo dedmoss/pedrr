@@ -232,10 +232,10 @@
         card.className = "team";
 
         card.innerHTML = `
-          <h3>${team.location || ""} ${team.nickname || ""}</h3>
-          <div class="owner">${ownerName}</div>
-          <div class="record">${wins}-${losses}-${ties}</div>
-        `;
+  <h3>${team.name || `${team.location || ""} ${team.nickname || ""}`}</h3>
+  <div class="owner">${ownerName}</div>
+  <div class="record">${wins}-${losses}-${ties}</div>
+`;
 
         teamsBox.appendChild(card);
       });
