@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Records | The Busch League</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #100914;
+  color: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+header {
+  padding: 45px 20px;
+  text-align: center;
+  background: linear-gradient(135deg, #ff1493, #8b2cff);
+}
+
+header h1 {
+  margin: 5px 0;
+  font-size: clamp(42px, 8vw, 75px);
+  text-transform: uppercase;
+}
+
+header p {
+  margin: 8px 0;
+}
+
+nav {
+  background: #1d1024;
+  text-align: center;
+  padding: 15px;
+}
+
+nav a {
+  color: #ff69bd;
+  text-decoration: none;
+  font-weight: bold;
+  margin: 0 12px;
+}
+
+main {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.panel {
+  background: #211329;
+  border: 1px solid #563163;
+  border-radius: 18px;
+  padding: 25px;
+  margin-bottom: 25px;
+}
+
+h2 {
+  color: #ff69bd;
+  margin-top: 0;
+}
+
+#status {
+  color: #d8c0dd;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+th {
+  text-align: left;
+  color: #ff8bcb;
+  border-bottom: 2px solid #563163;
+  padding: 12px 10px;
+}
+
+td {
+  padding: 13px 10px;
+  border-bottom: 1px solid #3a2343;
+}
+
+tbody tr:hover {
+  background: #30193a;
+}
+
+.rank {
+  font-weight: 900;
+  color: #ff69bd;
+}
+
+.manager {
+  font-weight: 900;
+  font-size: 17px;
+}
+
+.championships {
+  white-space: nowrap;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+}
+
+.card {
+  background: #30193a;
+  border-radius: 14px;
+  padding: 18px;
+  border-left: 5px solid #ff1493;
+}
+
+.card-title {
+  color: #ff8bcb;
+  font-size: 13px;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.card-value {
+  font-size: 28px;
+  font-weight: 900;
+  margin-top: 8px;
+}
+
+.small {
+  color: #cba9d1;
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+footer {
+  text-align: center;
+  color: #a98daf;
+  padding: 35px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div>THE ARCHIVES</div>
+  <h1>Busch League Records</h1>
+  <p>Seven seasons of triumph, tragedy and deeply questionable management.</p>
+</header>
+
+<nav>
+  <a href="/">Home</a>
+  <a href="/records.html">Records</a>
+</nav>
+
+<main>
+
+<section class="panel">
+  <h2>🏆 All-Time Leaderboard</h2>
+
+  <div id="status">
+    Digging through the archives...
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Manager</th>
+          <th>W</th>
+          <th>L</th>
+          <th>T</th>
+          <th>Win %</th>
+          <th>PF</th>
+          <th>PA</th>
+          <th>Titles</th>
+        </tr>
+      </thead>
+
+      <tbody id="leaderboard"></tbody>
+    </table>
+  </div>
+</section>
+
+
+<section class="panel">
+  <h2>👑 Championship History</h2>
+  <div id="champions" class="cards"></div>
+</section>
+
+
+<section class="panel">
+  <h2>📊 League Superlatives</h2>
+
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-title">Most Career Wins</div>
+      <div class="card-value" id="mostWins">—</div>
+      <div class="small" id="mostWinsDetail"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Most Career Points</div>
+      <div class="card-value" id="mostPoints">—</div>
+      <div class="small" id="mostPointsDetail"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Best Win Percentage</div>
+      <div class="card-value" id="bestPct">—</div>
+      <div class="small" id="bestPctDetail"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Most Championships</div>
+      <div class="card-value" id="mostTitles">—</div>
+      <div class="small" id="mostTitlesDetail"></div>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<footer>
+  THE BUSCH LEAGUE · EST. IN BAD DECISIONS
+</footer>
+
+
+<script>
+
+const LEAGUE_ID = "530294";
+
+const YEARS = [
+  2019,
+  2020,
+  2021,
+  2022,
+  2023,
+  2024,
+  2025
+];
+
+
+/*
+  ESPN real name → Busch League display name
+*/
+
+const NAME_MAP = {
+  "Geoffrey Gund": "Geoff",
+  "Tatsuya Adachi": "Tats",
+  "Doug Moss": "CMSH",
+  "Douglas Vos": "Vos",
+  "David Moss": "David",
+  "Matt Ungaro": "Matt",
+  "Cameron Williams": "Cam",
+  "Sam Propper": "Timmy",
+  "Trevor McGraw": "Trevor",
+  "Randy Lovelace": "Randy",
+  "Michele Riotta": "Michele",
+  "Peter Marton": "Peter"
+};
+
+
+function displayName(realName) {
+  return NAME_MAP[realName] || realName;
+}
+
+
+function createManager(name) {
+
+  return {
+    name,
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    championships: 0,
+    seasons: 0
+  };
+
+}
+
+
+async function getSeason(year) {
+
+  const url =
+    `https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/${year}/segments/0/leagues/${LEAGUE_ID}` +
+    `?view=mTeam&view=mSettings&view=mStandings`;
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`${year}: HTTP ${response.status}`);
+  }
+
+  return response.json();
+
+}
+
+
+async function buildRecords() {
+
+  const status = document.getElementById("status");
+
+  const managers = {};
+  const champions = [];
+
+  let seasonsLoaded = 0;
+
+
+  for (const year of YEARS) {
+
+    status.textContent =
+      `Loading ${year} Busch League season...`;
+
+    try {
+
+      const data = await getSeason(year);
+
+      const members = {};
+
+      (data.members || []).forEach(member => {
+
+        const realName =
+          `${member.firstName || ""} ${member.lastName || ""}`.trim()
+          || member.displayName
+          || "Unknown";
+
+        members[member.id] = realName;
+
+      });
+
+
+      (data.teams || []).forEach(team => {
+
+        const realName =
+          members[team.primaryOwner] ||
+          "Unknown";
+
+        const name = displayName(realName);
+
+        if (!managers[name]) {
+          managers[name] = createManager(name);
+        }
+
+        const manager = managers[name];
+
+        const record =
+          team.record?.overall || {};
+
+        manager.wins +=
+          Number(record.wins || 0);
+
+        manager.losses +=
+          Number(record.losses || 0);
+
+        manager.ties +=
+          Number(record.ties || 0);
+
+        manager.pointsFor +=
+          Number(record.pointsFor || 0);
+
+        manager.pointsAgainst +=
+          Number(record.pointsAgainst || 0);
+
+        manager.seasons++;
+
+
+        /*
+          We verified with the 2025 season that
+          rankCalculatedFinal === 1 identifies
+          the Busch League champion.
+        */
+
+        if (Number(team.rankCalculatedFinal) === 1) {
+
+          manager.championships++;
+
+          champions.push({
+            year,
+            manager: name,
+            team:
+              team.name ||
+              `${team.location || ""} ${team.nickname || ""}`.trim()
+          });
+
+        }
+
+      });
+
+      seasonsLoaded++;
+
+    }
+
+    catch(error) {
+
+      console.error(error);
+
+    }
+
+  }
+
+
+  const managerList =
+    Object.values(managers);
+
+
+  /*
+    Sort the leaderboard by career wins.
+    Points For breaks ties.
+  */
+
+  managerList.sort((a, b) =>
+    b.wins - a.wins ||
+    b.pointsFor - a.pointsFor
+  );
+
+
+  const leaderboard =
+    document.getElementById("leaderboard");
+
+
+  managerList.forEach((manager, index) => {
+
+    const games =
+      manager.wins +
+      manager.losses +
+      manager.ties;
+
+    const winPct =
+      games > 0
+        ? ((manager.wins + manager.ties * 0.5) / games) * 100
+        : 0;
+
+    const row =
+      document.createElement("tr");
+
+    const trophies =
+      manager.championships > 0
+        ? "🏆".repeat(manager.championships)
+        : "—";
+
+    row.innerHTML = `
+      <td class="rank">${index + 1}</td>
+
+      <td class="manager">
+        ${manager.name}
+      </td>
+
+      <td>${manager.wins}</td>
+
+      <td>${manager.losses}</td>
+
+      <td>${manager.ties}</td>
+
+      <td>${winPct.toFixed(1)}%</td>
+
+      <td>${manager.pointsFor.toFixed(1)}</td>
+
+      <td>${manager.pointsAgainst.toFixed(1)}</td>
+
+      <td class="championships">
+        ${trophies}
+      </td>
+    `;
+
+    leaderboard.appendChild(row);
+
+  });
+
+
+  /*
+    Championship history
+  */
+
+  champions.sort((a, b) =>
+    b.year - a.year
+  );
+
+
+  const championsBox =
+    document.getElementById("champions");
+
+
+  champions.forEach(champion => {
+
+    const card =
+      document.createElement("div");
+
+    card.className = "card";
+
+    card.innerHTML = `
+      <div class="card-title">
+        ${champion.year} Champion
+      </div>
+
+      <div class="card-value">
+        🏆 ${champion.manager}
+      </div>
+
+      <div class="small">
+        ${champion.team}
+      </div>
+    `;
+
+    championsBox.appendChild(card);
+
+  });
+
+
+  /*
+    Superlatives
+  */
+
+  const byWins =
+    [...managerList]
+      .sort((a,b) => b.wins - a.wins)[0];
+
+
+  const byPoints =
+    [...managerList]
+      .sort((a,b) =>
+        b.pointsFor - a.pointsFor
+      )[0];
+
+
+  const byPct =
+    [...managerList]
+      .sort((a,b) => {
+
+        const gamesA =
+          a.wins + a.losses + a.ties;
+
+        const gamesB =
+          b.wins + b.losses + b.ties;
+
+        const pctA =
+          gamesA
+            ? (a.wins + a.ties * .5) / gamesA
+            : 0;
+
+        const pctB =
+          gamesB
+            ? (b.wins + b.ties * .5) / gamesB
+            : 0;
+
+        return pctB - pctA;
+
+      })[0];
+
+
+  const byTitles =
+    [...managerList]
+      .sort((a,b) =>
+        b.championships - a.championships ||
+        b.wins - a.wins
+      )[0];
+
+
+  document.getElementById("mostWins")
+    .textContent =
+      byWins?.name || "—";
+
+  document.getElementById("mostWinsDetail")
+    .textContent =
+      byWins
+        ? `${byWins.wins} career wins`
+        : "";
+
+
+  document.getElementById("mostPoints")
+    .textContent =
+      byPoints?.name || "—";
+
+  document.getElementById("mostPointsDetail")
+    .textContent =
+      byPoints
+        ? `${byPoints.pointsFor.toFixed(1)} career points`
+        : "";
+
+
+  const pctGames =
+    byPct
+      ? byPct.wins +
+        byPct.losses +
+        byPct.ties
+      : 0;
+
+  const pct =
+    pctGames
+      ? ((byPct.wins +
+          byPct.ties * .5) /
+          pctGames) * 100
+      : 0;
+
+
+  document.getElementById("bestPct")
+    .textContent =
+      byPct?.name || "—";
+
+  document.getElementById("bestPctDetail")
+    .textContent =
+      byPct
+        ? `${pct.toFixed(1)}% career win rate`
+        : "";
+
+
+  document.getElementById("mostTitles")
+    .textContent =
+      byTitles?.name || "—";
+
+  document.getElementById("mostTitlesDetail")
+    .textContent =
+      byTitles
+        ? `${byTitles.championships} championship${byTitles.championships === 1 ? "" : "s"}`
+        : "";
+
+
+  status.innerHTML =
+    `🔥 Loaded ${seasonsLoaded} completed seasons: 2019–2025.`;
+
+}
+
+
+buildRecords();
+
+</script>
+
+</body>
+</html>
