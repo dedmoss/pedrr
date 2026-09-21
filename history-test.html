@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Busch League History Test</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      background: #100914;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    main {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    h1 {
+      color: #ff1493;
+      font-size: 48px;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      color: #cba9d1;
+      margin-bottom: 30px;
+    }
+
+    button {
+      background: #ff1493;
+      color: white;
+      border: 0;
+      padding: 14px 22px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #status {
+      margin: 25px 0;
+      color: #ff8bcb;
+    }
+
+    .season {
+      background: #211329;
+      border: 1px solid #563163;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+
+    .success {
+      border-left: 5px solid #35d07f;
+    }
+
+    .failure {
+      border-left: 5px solid #ff4f81;
+    }
+
+    .year {
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .details {
+      margin-top: 6px;
+      color: #d8c0dd;
+    }
+  </style>
+</head>
+
+<body>
+
+<main>
+
+  <h1>🏺 ESPN Archaeology</h1>
+
+  <div class="subtitle">
+    Digging through the ancient ruins of The Busch League...
+  </div>
+
+  <button onclick="scanHistory()">
+    DIG UP THE PAST
+  </button>
+
+  <div id="status">
+    Ready to interrogate ESPN.
+  </div>
+
+  <div id="results"></div>
+
+</main>
+
+<script>
+
+const LEAGUE_ID = "530294";
+
+/*
+  We'll test backwards from the current year.
+
+  2018 is important because ESPN's fantasy platform changed
+  substantially around this period. We'll go farther back later
+  if the league is old enough and the data is accessible.
+*/
+
+const CURRENT_YEAR = new Date().getFullYear();
+const OLDEST_TEST_YEAR = 2018;
+
+const statusBox = document.getElementById("status");
+const resultsBox = document.getElementById("results");
+
+async function testSeason(year) {
+
+  const url =
+    `https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/${year}/segments/0/leagues/${LEAGUE_ID}?view=mTeam&view=mSettings&view=mMatchup`;
+
+  try {
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    const teams = data.teams || [];
+    const schedule = data.schedule || [];
+
+    /*
+      ESPN's schedule contains individual fantasy matchups.
+      This lets us verify we're getting more than just a league shell.
+    */
+
+    const completedGames = schedule.filter(game => {
+      return game.home && game.away &&
+             typeof game.home.totalPoints === "number" &&
+             typeof game.away.totalPoints === "number";
+    });
+
+    return {
+      success: true,
+      year,
+      teams: teams.length,
+      games: schedule.length,
+      scoredGames: completedGames.length,
+      leagueName:
+        data.settings?.name ||
+        "The Busch League"
+    };
+
+  } catch (error) {
+
+    return {
+      success: false,
+      year,
+      error: error.message
+    };
+
+  }
+}
+
+
+async function scanHistory() {
+
+  resultsBox.innerHTML = "";
+
+  statusBox.innerHTML =
+    "🍺 Searching ESPN's basement...";
+
+  let seasonsFound = 0;
+
+  for (
+    let year = CURRENT_YEAR;
+    year >= OLDEST_TEST_YEAR;
+    year--
+  ) {
+
+    statusBox.innerHTML =
+      `🔎 Checking ${year}...`;
+
+    const result = await testSeason(year);
+
+    const card = document.createElement("div");
+    card.className =
+      "season " +
+      (result.success ? "success" : "failure");
+
+    if (result.success) {
+
+      seasonsFound++;
+
+      card.innerHTML = `
+        <div class="year">
+          ✅ ${result.year}
+        </div>
+
+        <div class="details">
+          ${result.teams} teams ·
+          ${result.games} matchups ·
+          ${result.scoredGames} matchups with scores
+        </div>
+      `;
+
+    } else {
+
+      card.innerHTML = `
+        <div class="year">
+          ❌ ${result.year}
+        </div>
+
+        <div class="details">
+          ESPN said: ${result.error}
+        </div>
+      `;
+
+    }
+
+    resultsBox.appendChild(card);
+  }
+
+  statusBox.innerHTML =
+    `🏆 Dig complete. Found ${seasonsFound} accessible seasons.`;
+
+}
+
+</script>
+
+</body>
+</html>
