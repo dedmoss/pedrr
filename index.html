@@ -1,96 +1,262 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Busch League</title>
+
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      background: #130b18;
-      color: #fff4fb;
-      font-family: Arial, sans-serif;
+      background: #100914;
+      color: #fff;
+      font-family: Arial, Helvetica, sans-serif;
     }
+
     header {
-      padding: 48px 20px;
+      padding: 55px 20px;
       text-align: center;
-      background: linear-gradient(135deg, #ff2b9d, #8b2cff);
+      background: linear-gradient(135deg, #ff1493, #8b2cff);
     }
+
     .eyebrow {
-      font-weight: bold;
+      font-size: 14px;
+      font-weight: 900;
       letter-spacing: 4px;
       text-transform: uppercase;
     }
+
     h1 {
-      margin: 12px 0;
-      font-size: clamp(42px, 9vw, 86px);
-      text-transform: uppercase;
+      margin: 10px 0;
+      font-size: clamp(48px, 9vw, 90px);
       font-weight: 900;
+      text-transform: uppercase;
     }
-    header p { font-size: 18px; }
+
+    header p {
+      font-size: 19px;
+      margin-bottom: 5px;
+    }
+
+    .league-id {
+      opacity: .8;
+      font-size: 13px;
+    }
+
+    nav {
+      background: #1d1024;
+      text-align: center;
+      padding: 15px;
+      position: sticky;
+      top: 0;
+    }
+
+    nav a {
+      color: #ff69bd;
+      text-decoration: none;
+      font-weight: bold;
+      margin: 0 12px;
+    }
+
     main {
-      max-width: 900px;
+      max-width: 1100px;
       margin: 40px auto;
       padding: 0 20px;
     }
+
     .panel {
-      background: #24152e;
-      border: 1px solid #573264;
+      background: #211329;
+      border: 1px solid #563163;
       border-radius: 18px;
-      padding: 24px;
-      margin-bottom: 20px;
+      padding: 25px;
+      margin-bottom: 25px;
     }
-    h2 { color: #ff69bd; }
-    .tag {
-      display: inline-block;
-      background: #ff2b9d;
-      color: #210d1b;
-      padding: 7px 12px;
-      border-radius: 99px;
+
+    h2 {
+      color: #ff69bd;
+      margin-top: 0;
+    }
+
+    .status {
+      background: #351b3d;
+      border-radius: 10px;
+      padding: 15px;
+    }
+
+    .teams {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .team {
+      background: #30193a;
+      border-radius: 14px;
+      padding: 18px;
+      border-left: 5px solid #ff1493;
+    }
+
+    .team h3 {
+      margin: 0 0 8px;
+      color: #fff;
+    }
+
+    .owner {
+      color: #ff8bcb;
+      font-size: 14px;
+    }
+
+    .record {
+      margin-top: 10px;
+      font-size: 20px;
       font-weight: bold;
     }
-    a { color: #ff8bcb; }
+
+    .loading {
+      color: #d9b9dc;
+    }
+
+    .error {
+      color: #ff9acb;
+      line-height: 1.5;
+    }
+
     footer {
       text-align: center;
-      padding: 30px;
-      color: #c6aecb;
+      padding: 35px;
+      color: #a98daf;
     }
   </style>
 </head>
+
 <body>
-  <header>
-    <div class="eyebrow">Welcome to the madness</div>
-    <h1>The Busch League</h1>
-    <p>Fantasy football. Questionable decisions. Legendary nonsense.</p>
-    <span class="tag">Est. in the group chat</span>
-  </header>
 
-  <main>
-    <section class="panel">
-      <h2>🏈 The Naughtyboyz</h2>
-      <p>One league. A whole lot of trash talk.</p>
-      <p>ESPN League ID: 530294</p>
-      <p>We're building the home for league standings, teams,
-         weekly matchups, and the glorious history of this league.</p>
-    </section>
+<header>
+  <div class="eyebrow">Home of the Naughtyboyz</div>
+  <h1>The Busch League</h1>
+  <p>Fantasy football. Questionable decisions. Legendary nonsense.</p>
+  <div class="league-id">ESPN League #530294</div>
+</header>
 
-    <section class="panel">
-      <h2>📊 The League Dashboard</h2>
-      <p>Live ESPN standings and historical seasons are coming soon.</p>
-      <p>Next up: connecting this site to the league's ESPN data.</p>
-    </section>
+<nav>
+  <a href="#standings">Standings</a>
+  <a href="#history">History</a>
+  <a href="#hof">Hall of Fame</a>
+</nav>
 
-    <section class="panel">
-      <h2>📜 League History</h2>
-      <p>All available seasons will live here once the ESPN connection
-         is in place.</p>
-    </section>
-  </main>
+<main>
 
-  <footer>
-    The Busch League · Naughtyboyz only (figuratively)
-  </footer>
+  <section class="panel" id="standings">
+    <h2>🏈 Naughtyboyz Standings</h2>
+
+    <div class="status" id="status">
+      Attempting to contact ESPN headquarters...
+    </div>
+
+    <div class="teams" id="teams"></div>
+  </section>
+
+  <section class="panel" id="history">
+    <h2>📜 League History</h2>
+    <p>
+      Championships, all-time records, biggest beatdowns and years of
+      regrettable roster decisions are coming next.
+    </p>
+  </section>
+
+  <section class="panel" id="hof">
+    <h2>🏆 Hall of Fame</h2>
+    <p>
+      Soon this will be the permanent home of champions, legendary seasons,
+      spectacular collapses and other Busch League nonsense.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  THE BUSCH LEAGUE · ESPN 530294 · NAUGHTYBOYZ FOREVER
+</footer>
+
+<script>
+  const LEAGUE_ID = "530294";
+  const SEASON = new Date().getFullYear();
+
+  const statusBox = document.getElementById("status");
+  const teamsBox = document.getElementById("teams");
+
+  async function loadLeague() {
+    const url =
+      `https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/${SEASON}/segments/0/leagues/${LEAGUE_ID}?view=mTeam`;
+
+    try {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`ESPN returned ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      statusBox.innerHTML =
+        `🔥 Connected to ESPN — ${data.teams.length} naughtyboyz located.`;
+
+      const members = {};
+
+      if (data.members) {
+        data.members.forEach(member => {
+          members[member.id] =
+            member.displayName ||
+            `${member.firstName || ""} ${member.lastName || ""}`.trim();
+        });
+      }
+
+      const sortedTeams = [...data.teams].sort((a, b) => {
+        const aWins = a.record?.overall?.wins || 0;
+        const bWins = b.record?.overall?.wins || 0;
+        return bWins - aWins;
+      });
+
+      sortedTeams.forEach(team => {
+        const ownerId = team.primaryOwner;
+        const ownerName = members[ownerId] || "Unknown Naughtyboy";
+
+        const wins = team.record?.overall?.wins ?? 0;
+        const losses = team.record?.overall?.losses ?? 0;
+        const ties = team.record?.overall?.ties ?? 0;
+
+        const card = document.createElement("div");
+        card.className = "team";
+
+        card.innerHTML = `
+          <h3>${team.location || ""} ${team.nickname || ""}</h3>
+          <div class="owner">${ownerName}</div>
+          <div class="record">${wins}-${losses}-${ties}</div>
+        `;
+
+        teamsBox.appendChild(card);
+      });
+
+    } catch (error) {
+      console.error(error);
+
+      statusBox.innerHTML = `
+        <div class="error">
+          🍺 ESPN connection test failed.<br><br>
+          That's okay — the website is working. It means we'll need to route
+          the ESPN data through our own API instead of asking ESPN directly
+          from this page.<br><br>
+          Error: ${error.message}
+        </div>
+      `;
+    }
+  }
+
+  loadLeague();
+</script>
+
 </body>
 </html>
