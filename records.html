@@ -154,7 +154,7 @@ footer {
 <header>
   <div>THE ARCHIVES</div>
   <h1>Busch League Records</h1>
-  <p>Seven seasons of triumph, tragedy and deeply questionable management.</p>
+ <p>Sixteen seasons of triumph, tragedy and deeply questionable management.</p>
 </header>
 
 <nav>
@@ -240,18 +240,10 @@ footer {
 
 <script>
 
-const LEAGUE_ID = "530294";
-
-const YEARS = [
-  2019,
-  2020,
-  2021,
-  2022,
-  2023,
-  2024,
-  2025
+const ARCHIVE_FILES = [
+  "busch-league-history-2010-2018.json",
+  "busch-league-history-2019-2025.json"
 ];
-
 
 /*
   ESPN real name → Busch League display name
@@ -263,6 +255,7 @@ const NAME_MAP = {
   "Doug Moss": "CMSH",
   "Douglas Vos": "Vos",
   "David Moss": "David",
+  "David Mos": "David",
   "Matt Ungaro": "Matt",
   "Cameron Williams": "Cam",
   "Sam Propper": "Timmy",
@@ -294,20 +287,29 @@ function createManager(name) {
 }
 
 
-async function getSeason(year) {
+async function getArchive() {
 
-  const url =
-    `https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/${year}/segments/0/leagues/${LEAGUE_ID}` +
-    `?view=mTeam&view=mSettings&view=mStandings`;
+  const responses =
+    await Promise.all(
+      ARCHIVE_FILES.map(file => fetch(file))
+    );
 
-  const response = await fetch(url);
+  for (const response of responses) {
 
-  if (!response.ok) {
-    throw new Error(`${year}: HTTP ${response.status}`);
+    if (!response.ok) {
+      throw new Error(
+        `Archive failed to load: HTTP ${response.status}`
+      );
+    }
+
   }
 
-  return response.json();
+  const archives =
+    await Promise.all(
+      responses.map(response => response.json())
+    );
 
+  return Object.assign({}, ...archives);
 }
 
 
@@ -321,14 +323,22 @@ async function buildRecords() {
   let seasonsLoaded = 0;
 
 
-  for (const year of YEARS) {
+  const archive = await getArchive();
 
-    status.textContent =
-      `Loading ${year} Busch League season...`;
+const years =
+  Object.keys(archive)
+    .filter(year => /^\d{4}$/.test(year))
+    .map(Number)
+    .sort((a, b) => a - b);
 
-    try {
+for (const year of years) {
 
-      const data = await getSeason(year);
+  status.textContent =
+    `Loading ${year} Busch League season...`;
+
+  try {
+
+    const data = archive[year];
 
       const members = {};
 
@@ -630,7 +640,7 @@ async function buildRecords() {
 
 
   status.innerHTML =
-    `🔥 Loaded ${seasonsLoaded} completed seasons: 2019–2025.`;
+  `🔥 Loaded ${seasonsLoaded} completed seasons: 2010–2025.`;
 
 }
 
