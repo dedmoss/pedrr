@@ -330,10 +330,109 @@ function getRegularSeasonLength(data) {
   ) || "Unknown";
 }
 
+function getRunnerUp(data) {
 
-function makeSeasonCard(year, data) {
+  const teams = data.teams || [];
+  const members = data.members || [];
+
+  const runnerUp =
+    teams.find(team =>
+      team.rankCalculatedFinal === 2
+    );
+
+  if (!runnerUp) {
+    return {
+      manager: "Unknown",
+      team: "Unknown"
+    };
+  }
+
+  const ownerId =
+    runnerUp.primaryOwner ||
+    runnerUp.owners?.[0];
+
+  const member =
+    members.find(member =>
+      member.id === ownerId
+    );
+
+  const fullName = member
+    ? `${member.firstName || ""} ${member.lastName || ""}`.trim()
+    : "Unknown";
+
+  return {
+    manager: displayManager(fullName),
+    team:
+      runnerUp.name ||
+      `${runnerUp.location || ""} ${runnerUp.nickname || ""}`.trim() ||
+      "Unknown",
+    teamId: runnerUp.id
+  };
+}
+  function getChampionshipGame(data) {
+
+  const teams = data.teams || [];
+  const schedule = data.schedule || [];
+
+  const champion =
+    teams.find(team =>
+      team.rankCalculatedFinal === 1
+    );
+
+  const runnerUp =
+    teams.find(team =>
+      team.rankCalculatedFinal === 2
+    );
+
+  if (!champion || !runnerUp) {
+    return null;
+  }
+
+  const championship =
+    schedule.find(game => {
+
+      const homeId = game.home?.teamId;
+      const awayId = game.away?.teamId;
+
+      return (
+        (homeId === champion.id &&
+         awayId === runnerUp.id) ||
+
+        (homeId === runnerUp.id &&
+         awayId === champion.id)
+      );
+    });
+
+  if (!championship) {
+    return null;
+  }
+
+  const championSide =
+    championship.home?.teamId === champion.id
+      ? championship.home
+      : championship.away;
+
+  const runnerUpSide =
+    championship.home?.teamId === runnerUp.id
+      ? championship.home
+      : championship.away;
+
+  return {
+    championScore:
+      championSide?.totalPoints ?? null,
+
+    runnerUpScore:
+      runnerUpSide?.totalPoints ?? null,
+
+    matchupPeriod:
+      championship.matchupPeriodId
+  };
+}
+  function makeSeasonCard(year, data) {
 
   const champion = getChampion(data);
+  const runnerUp = getRunnerUp(data);
+  const championship = getChampionshipGame(data);
   const best = getBestRegularSeason(data);
 
   const teamCount =
@@ -343,6 +442,13 @@ function makeSeasonCard(year, data) {
 
   const regularSeasonLength =
     getRegularSeasonLength(data);
+
+  const championshipScore =
+    championship &&
+    championship.championScore !== null &&
+    championship.runnerUpScore !== null
+      ? `${champion.manager} ${championship.championScore.toFixed(2)} – ${runnerUp.manager} ${championship.runnerUpScore.toFixed(2)}`
+      : "Score unavailable";
 
   return `
     <article class="season-card">
@@ -362,6 +468,19 @@ function makeSeasonCard(year, data) {
       </div>
 
       <div class="details">
+
+        <div>
+          <strong>🥈 Runner-up:</strong>
+          ${runnerUp.manager}
+          <span class="muted">
+            — ${runnerUp.team}
+          </span>
+        </div>
+
+        <div>
+          <strong>Championship:</strong>
+          ${championshipScore}
+        </div>
 
         <div>
           <strong>Best regular season:</strong>
