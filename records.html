@@ -176,14 +176,14 @@ footer {
       <thead>
         <tr>
           <th>#</th>
-          <th>Manager</th>
-          <th>W</th>
-          <th>L</th>
-          <th>T</th>
-          <th>Win %</th>
-          <th>PF</th>
-          <th>PA</th>
-          <th>Titles</th>
+<th data-sort="name">Manager</th>
+<th data-sort="wins">W</th>
+<th data-sort="losses">L</th>
+<th data-sort="ties">T</th>
+<th data-sort="winPct">Win %</th>
+<th data-sort="pointsFor">PF</th>
+<th data-sort="pointsAgainst">PA</th>
+<th data-sort="championships">Titles</th>
         </tr>
       </thead>
 
@@ -457,6 +457,8 @@ for (const year of years) {
         ? ((manager.wins + manager.ties * 0.5) / games) * 100
         : 0;
 
+    manager.winPct = winPct;
+    
     const row =
       document.createElement("tr");
 
@@ -493,6 +495,91 @@ for (const year of years) {
 
   });
 
+  let sortKey = "wins";
+let sortDirection = "desc";
+
+function sortLeaderboard(key) {
+
+  if (sortKey === key) {
+    sortDirection =
+      sortDirection === "desc" ? "asc" : "desc";
+  } else {
+    sortKey = key;
+    sortDirection =
+      key === "name" ? "asc" : "desc";
+  }
+
+  managerList.sort((a, b) => {
+
+    let comparison;
+
+    if (key === "name") {
+      comparison =
+        a.name.localeCompare(b.name);
+    } else {
+      comparison =
+        Number(a[key] || 0) - Number(b[key] || 0);
+    }
+
+    return sortDirection === "asc"
+      ? comparison
+      : -comparison;
+  });
+
+  leaderboard.innerHTML = "";
+
+  managerList.forEach((manager, index) => {
+
+    const trophies =
+      manager.championships > 0
+        ? "🏆".repeat(manager.championships)
+        : "—";
+
+    const row =
+      document.createElement("tr");
+
+    row.innerHTML = `
+      <td class="rank">${index + 1}</td>
+      <td class="manager">${manager.name}</td>
+      <td>${manager.wins}</td>
+      <td>${manager.losses}</td>
+      <td>${manager.ties}</td>
+      <td>${manager.winPct.toFixed(1)}%</td>
+      <td>${manager.pointsFor.toFixed(1)}</td>
+      <td>${manager.pointsAgainst.toFixed(1)}</td>
+      <td class="championships">${trophies}</td>
+    `;
+
+    leaderboard.appendChild(row);
+
+  });
+
+document
+  .querySelectorAll("th[data-sort]")
+  .forEach(header => {
+
+    const label =
+      header.textContent.replace(/[▲▼]/g, "").trim();
+
+    header.textContent =
+      header.dataset.sort === sortKey
+        ? `${label} ${sortDirection === "asc" ? "▲" : "▼"}`
+        : label;
+
+  });}
+
+document
+  .querySelectorAll("th[data-sort]")
+  .forEach(header => {
+
+    header.style.cursor = "pointer";
+
+    header.addEventListener("click", () => {
+      sortLeaderboard(header.dataset.sort);
+    });
+
+  });
+  
 
   /*
     Championship history
