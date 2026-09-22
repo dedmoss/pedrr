@@ -777,8 +777,9 @@ if (allGames.length) {
       .sort((a, b) => b.score - a.score)[0];
 
   const lowestScore =
-    [...performances]
-      .sort((a, b) => a.score - b.score)[0];
+  [...performances]
+    .filter(game => game.score > 0)
+    .sort((a, b) => a.score - b.score)[0];
 
   const highestLoss =
     [...performances]
@@ -788,11 +789,12 @@ if (allGames.length) {
       .sort((a, b) => b.score - a.score)[0];
 
   const lowestWin =
-    [...performances]
-      .filter(game =>
-        game.score > game.opponentScore
-      )
-      .sort((a, b) => a.score - b.score)[0];
+  [...performances]
+    .filter(game =>
+      game.score > game.opponentScore &&
+      game.opponentScore > 0
+    )
+    .sort((a, b) => a.score - b.score)[0];
 
 
   const biggestBlowout =
@@ -815,8 +817,8 @@ if (allGames.length) {
 
   function performanceDetail(game) {
 
-    return `${game.year} · Matchup ${game.matchupPeriod} · vs ${game.opponent} (${game.opponentScore.toFixed(1)})`;
-
+   return `${game.year} · Week ${game.matchupPeriod} · vs ${game.opponent} (${game.opponentScore.toFixed(1)})`;
+    
   }
 
 
@@ -878,9 +880,21 @@ if (allGames.length) {
     .textContent =
       `${blowoutWinner} by ${blowoutMargin.toFixed(1)}`;
 
-  document.getElementById("biggestBlowoutDetail")
-    .textContent =
-      `${biggestBlowout.year} · Matchup ${biggestBlowout.matchupPeriod} · over ${blowoutLoser}`;
+  const blowoutWinnerScore =
+  Math.max(
+    biggestBlowout.homeScore,
+    biggestBlowout.awayScore
+  );
+
+const blowoutLoserScore =
+  Math.min(
+    biggestBlowout.homeScore,
+    biggestBlowout.awayScore
+  );
+
+document.getElementById("biggestBlowoutDetail")
+  .textContent =
+    `${biggestBlowout.year} · Week ${biggestBlowout.matchupPeriod} · ${blowoutWinner} ${blowoutWinnerScore.toFixed(1)} – ${blowoutLoser} ${blowoutLoserScore.toFixed(1)}`;
 
 
   const closestMargin =
@@ -895,7 +909,7 @@ if (allGames.length) {
 
   document.getElementById("closestGameDetail")
     .textContent =
-      `${closestGame.year} · Matchup ${closestGame.matchupPeriod} · ${closestGame.homeManager} ${closestGame.homeScore.toFixed(1)} – ${closestGame.awayManager} ${closestGame.awayScore.toFixed(1)}`;
+      `${closestGame.year} · Week ${closestGame.matchupPeriod} · ${closestGame.homeManager} ${closestGame.homeScore.toFixed(1)} – ${closestGame.awayManager} ${closestGame.awayScore.toFixed(1)}`;
 
 }
   
