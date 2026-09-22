@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>The Busch League — History</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top left, #6d006d 0%, transparent 35%),
+        radial-gradient(circle at top right, #ff1493 0%, transparent 28%),
+        #100012;
+      color: white;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 55px 20px 35px;
+      text-align: center;
+      border-bottom: 3px solid #ff2ca8;
+    }
+
+    .eyebrow {
+      color: #ff75c8;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    h1 {
+      margin: 10px 0 5px;
+      font-size: clamp(42px, 8vw, 82px);
+      line-height: .95;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      color: #d8b7d8;
+      font-size: 18px;
+      margin-top: 14px;
+    }
+
+    nav {
+      margin-top: 25px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 10px;
+      font-weight: bold;
+    }
+
+    nav a:hover {
+      color: #ff75c8;
+    }
+
+    main {
+      width: min(1100px, 92%);
+      margin: 45px auto 80px;
+    }
+
+    .intro {
+      max-width: 760px;
+      margin: 0 auto 45px;
+      text-align: center;
+      color: #d8c8d8;
+      line-height: 1.6;
+    }
+
+    #history {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 22px;
+    }
+
+    .season-card {
+      background: rgba(34, 0, 38, .88);
+      border: 1px solid #6c2c6c;
+      border-top: 5px solid #ff2ca8;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.25);
+    }
+
+    .year {
+      font-size: 42px;
+      font-weight: 900;
+      color: #ff55b8;
+      margin-bottom: 18px;
+    }
+
+    .champion-label {
+      color: #d8a8cf;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+
+    .champion {
+      font-size: 27px;
+      font-weight: 900;
+      margin-top: 5px;
+    }
+
+    .team-name {
+      color: #ff9bd5;
+      margin-top: 4px;
+      min-height: 38px;
+      font-style: italic;
+    }
+
+    .details {
+      border-top: 1px solid #572557;
+      margin-top: 20px;
+      padding-top: 17px;
+      color: #d8c8d8;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .details strong {
+      color: white;
+    }
+
+    .loading,
+    .error {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 50px;
+      color: #ff9bd5;
+    }
+
+    footer {
+      text-align: center;
+      color: #936f93;
+      padding: 30px 20px 60px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="eyebrow">Est. 2010 · Naughtyboyz Forever</div>
+
+  <h1>League History</h1>
+
+  <div class="subtitle">
+    The complete archaeological record of The Busch League.
+  </div>
+
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="history.html">History</a>
+    <a href="records.html">Records</a>
+  </nav>
+</header>
+
+<main>
+
+  <div class="intro">
+    Teams changed. Managers came and went. Terrible decisions were made.
+    The receipts survived.
+    <br><br>
+    This archive begins with the inaugural 2010 season and will eventually
+    contain every completed Busch League season.
+  </div>
+
+  <div id="history">
+    <div class="loading">Excavating the archives...</div>
+  </div>
+
+</main>
+
+<footer>
+  THE BUSCH LEAGUE · 2010–FOREVER
+</footer>
+
+<script>
+
+const MANAGER_NAMES = {
+  "Geoffrey Gund": "Geoff",
+  "Tatsuya Adachi": "Tats",
+  "Doug Moss": "CMSH",
+  "Douglas Vos": "Vos",
+  "David Moss": "David",
+  "David Mos": "David",
+  "Matt Ungaro": "Matt",
+  "Cameron Williams": "Cam",
+  "Sam Propper": "Timmy",
+  "Trevor McGraw": "Trevor",
+  "Randy Lovelace": "Randy",
+  "Michele Riotta": "Michele",
+  "Peter Marton": "Peter"
+};
+
+
+function getMemberName(member) {
+  if (!member) return "Unknown";
+
+  const fullName =
+    `${member.firstName || ""} ${member.lastName || ""}`.trim();
+
+  return MANAGER_NAMES[fullName] || fullName || "Unknown";
+}
+
+
+function getOwner(team, members) {
+
+  const ownerId =
+    team.primaryOwner ||
+    (Array.isArray(team.owners) ? team.owners[0] : null);
+
+  const member = members.find(m => m.id === ownerId);
+
+  return getMemberName(member);
+}
+
+
+function getChampion(data) {
+
+  const teams = data.teams || [];
+  const members = data.members || [];
+
+  const champion = teams.find(team =>
+    Number(team.rankCalculatedFinal) === 1
+  );
+
+  if (!champion) {
+    return {
+      manager: "Unknown",
+      team: "Unknown"
+    };
+  }
+
+  return {
+    manager: getOwner(champion, members),
+    team: champion.name || "Unknown"
+  };
+}
+
+
+function getBestRegularSeason(data) {
+
+  const teams = data.teams || [];
+  const members = data.members || [];
+
+  const ranked = [...teams].sort((a, b) => {
+
+    const aRecord = a.record?.overall || {};
+    const bRecord = b.record?.overall || {};
+
+    const aPct =
+      Number(aRecord.percentage) ||
+      ((aRecord.wins || 0) /
+      Math.max(
+        1,
+        (aRecord.wins || 0) +
+        (aRecord.losses || 0) +
+        (aRecord.ties || 0)
+      ));
+
+    const bPct =
+      Number(bRecord.percentage) ||
+      ((bRecord.wins || 0) /
+      Math.max(
+        1,
+        (bRecord.wins || 0) +
+        (bRecord.losses || 0) +
+        (bRecord.ties || 0)
+      ));
+
+    if (bPct !== aPct) {
+      return bPct - aPct;
+    }
+
+    return (bRecord.pointsFor || 0) -
+           (aRecord.pointsFor || 0);
+  });
+
+  const best = ranked[0];
+
+  if (!best) return null;
+
+  const record = best.record?.overall || {};
+
+  return {
+    manager: getOwner(best, members),
+    wins: record.wins || 0,
+    losses: record.losses || 0,
+    ties: record.ties || 0
+  };
+}
+
+
+function recordText(record) {
+
+  if (!record) return "Unknown";
+
+  let text = `${record.wins}-${record.losses}`;
+
+  if (record.ties) {
+    text += `-${record.ties}`;
+  }
+
+  return text;
+}
+
+
+function getRegularSeasonLength(data) {
+
+  return (
+    data.settings
+      ?.scheduleSettings
+      ?.matchupPeriodCount
+  ) || "Unknown";
+}
+
+
+function makeSeasonCard(year, data) {
+
+  const champion = getChampion(data);
+  const best = getBestRegularSeason(data);
+
+  const teamCount =
+    data.teams?.length ||
+    data.settings?.size ||
+    "Unknown";
+
+  const regularSeasonLength =
+    getRegularSeasonLength(data);
+
+  return `
+    <article class="season-card">
+
+      <div class="year">${year}</div>
+
+      <div class="champion-label">
+        🏆 Busch League Champion
+      </div>
+
+      <div class="champion">
+        ${champion.manager}
+      </div>
+
+      <div class="team-name">
+        ${champion.team}
+      </div>
+
+      <div class="details">
+
+        <div>
+          <strong>Best regular season:</strong>
+          ${best ? best.manager : "Unknown"}
+          ${best ? `(${recordText(best)})` : ""}
+        </div>
+
+        <div>
+          <strong>League size:</strong>
+          ${teamCount} teams
+        </div>
+
+        <div>
+          <strong>Regular season:</strong>
+          ${regularSeasonLength} matchup periods
+        </div>
+
+      </div>
+
+    </article>
+  `;
+}
+
+
+async function loadHistory() {
+
+  const container =
+    document.getElementById("history");
+
+  try {
+
+    const response = await fetch(
+      "busch-league-history-2010-2018.json"
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `HTTP ${response.status}`
+      );
+    }
+
+    const archive =
+      await response.json();
+
+    const years =
+      Object.keys(archive)
+        .filter(year =>
+          /^\d{4}$/.test(year)
+        )
+        .sort((a, b) => b - a);
+
+    if (!years.length) {
+      throw new Error(
+        "No seasons found in archive."
+      );
+    }
+
+    container.innerHTML =
+      years
+        .map(year =>
+          makeSeasonCard(
+            year,
+            archive[year]
+          )
+        )
+        .join("");
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+    container.innerHTML = `
+      <div class="error">
+        The archives are currently buried too deep.
+        <br><br>
+        ${error.message}
+      </div>
+    `;
+  }
+}
+
+
+loadHistory();
+
+</script>
+
+</body>
+</html>
