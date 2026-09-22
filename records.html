@@ -230,7 +230,56 @@ footer {
 
   </div>
 </section>
+<section class="panel">
 
+  <h2>🔥 The Busch League Record Book</h2>
+
+  <p class="small">
+    Sixteen seasons of statistical excellence, humiliation and evidence.
+  </p>
+
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-title">🚀 Highest Score</div>
+      <div class="card-value" id="highestScore">—</div>
+      <div class="small" id="highestScoreDetail"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🗑️ Lowest Score</div>
+      <div class="card-value" id="lowestScore">—</div>
+      <div class="small" id="lowestScoreDetail"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💀 Biggest Blowout</div>
+      <div class="card-value" id="biggestBlowout">—</div>
+      <div class="small" id="biggestBlowoutDetail"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">😬 Closest Game</div>
+      <div class="card-value" id="closestGame">—</div>
+      <div class="small" id="closestGameDetail"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">😭 Highest Score in a Loss</div>
+      <div class="card-value" id="highestLoss">—</div>
+      <div class="small" id="highestLossDetail"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🐀 Lowest Score in a Win</div>
+      <div class="card-value" id="lowestWin">—</div>
+      <div class="small" id="lowestWinDetail"></div>
+    </div>
+
+  </div>
+
+</section>
+  
 </main>
 
 <footer>
@@ -321,7 +370,7 @@ async function buildRecords() {
 
   const managers = {};
   const champions = [];
-
+  const allGames = [];
   let seasonsLoaded = 0;
 
 
@@ -413,6 +462,77 @@ for (const year of years) {
 
       });
 
+     const teamsById = {};
+
+(data.teams || []).forEach(team => {
+
+  const ownerId =
+    team.primaryOwner ||
+    team.owners?.[0];
+
+  const realName =
+    members[ownerId] ||
+    "Unknown";
+
+  teamsById[team.id] = {
+    manager: displayName(realName),
+    team:
+      team.name ||
+      `${team.location || ""} ${team.nickname || ""}`.trim()
+  };
+
+});
+
+
+(data.schedule || []).forEach(matchup => {
+
+  const home = matchup.home;
+  const away = matchup.away;
+
+  // Ignore byes and ESPN playoff placeholders.
+  if (!home || !away) return;
+
+  const homeScore =
+    Number(home.totalPoints);
+
+  const awayScore =
+    Number(away.totalPoints);
+
+  // Ignore games that were never actually played/scored.
+  if (
+    !Number.isFinite(homeScore) ||
+    !Number.isFinite(awayScore) ||
+    (homeScore === 0 && awayScore === 0)
+  ) {
+    return;
+  }
+
+  const homeTeam =
+    teamsById[home.teamId];
+
+  const awayTeam =
+    teamsById[away.teamId];
+
+  if (!homeTeam || !awayTeam) return;
+
+  allGames.push({
+    year,
+    matchupPeriod:
+      matchup.matchupPeriodId,
+    homeManager:
+      homeTeam.manager,
+    homeTeam:
+      homeTeam.team,
+    homeScore,
+    awayManager:
+      awayTeam.manager,
+    awayTeam:
+      awayTeam.team,
+    awayScore
+  });
+
+});
+    
       seasonsLoaded++;
 
     }
@@ -619,6 +739,166 @@ document
 
   });
 
+  /*
+  Busch League Record Book
+*/
+
+if (allGames.length) {
+
+  const performances = [];
+
+  allGames.forEach(game => {
+
+    performances.push({
+      year: game.year,
+      matchupPeriod: game.matchupPeriod,
+      manager: game.homeManager,
+      team: game.homeTeam,
+      score: game.homeScore,
+      opponent: game.awayManager,
+      opponentScore: game.awayScore
+    });
+
+    performances.push({
+      year: game.year,
+      matchupPeriod: game.matchupPeriod,
+      manager: game.awayManager,
+      team: game.awayTeam,
+      score: game.awayScore,
+      opponent: game.homeManager,
+      opponentScore: game.homeScore
+    });
+
+  });
+
+
+  const highestScore =
+    [...performances]
+      .sort((a, b) => b.score - a.score)[0];
+
+  const lowestScore =
+    [...performances]
+      .sort((a, b) => a.score - b.score)[0];
+
+  const highestLoss =
+    [...performances]
+      .filter(game =>
+        game.score < game.opponentScore
+      )
+      .sort((a, b) => b.score - a.score)[0];
+
+  const lowestWin =
+    [...performances]
+      .filter(game =>
+        game.score > game.opponentScore
+      )
+      .sort((a, b) => a.score - b.score)[0];
+
+
+  const biggestBlowout =
+    [...allGames]
+      .sort((a, b) =>
+        Math.abs(b.homeScore - b.awayScore) -
+        Math.abs(a.homeScore - a.awayScore)
+      )[0];
+
+  const closestGame =
+    [...allGames]
+      .filter(game =>
+        game.homeScore !== game.awayScore
+      )
+      .sort((a, b) =>
+        Math.abs(a.homeScore - a.awayScore) -
+        Math.abs(b.homeScore - b.awayScore)
+      )[0];
+
+
+  function performanceDetail(game) {
+
+    return `${game.year} · Matchup ${game.matchupPeriod} · vs ${game.opponent} (${game.opponentScore.toFixed(1)})`;
+
+  }
+
+
+  document.getElementById("highestScore")
+    .textContent =
+      `${highestScore.manager} — ${highestScore.score.toFixed(1)}`;
+
+  document.getElementById("highestScoreDetail")
+    .textContent =
+      performanceDetail(highestScore);
+
+
+  document.getElementById("lowestScore")
+    .textContent =
+      `${lowestScore.manager} — ${lowestScore.score.toFixed(1)}`;
+
+  document.getElementById("lowestScoreDetail")
+    .textContent =
+      performanceDetail(lowestScore);
+
+
+  document.getElementById("highestLoss")
+    .textContent =
+      `${highestLoss.manager} — ${highestLoss.score.toFixed(1)}`;
+
+  document.getElementById("highestLossDetail")
+    .textContent =
+      performanceDetail(highestLoss);
+
+
+  document.getElementById("lowestWin")
+    .textContent =
+      `${lowestWin.manager} — ${lowestWin.score.toFixed(1)}`;
+
+  document.getElementById("lowestWinDetail")
+    .textContent =
+      performanceDetail(lowestWin);
+
+
+  const blowoutWinner =
+    biggestBlowout.homeScore >
+    biggestBlowout.awayScore
+      ? biggestBlowout.homeManager
+      : biggestBlowout.awayManager;
+
+  const blowoutLoser =
+    biggestBlowout.homeScore >
+    biggestBlowout.awayScore
+      ? biggestBlowout.awayManager
+      : biggestBlowout.homeManager;
+
+  const blowoutMargin =
+    Math.abs(
+      biggestBlowout.homeScore -
+      biggestBlowout.awayScore
+    );
+
+  document.getElementById("biggestBlowout")
+    .textContent =
+      `${blowoutWinner} by ${blowoutMargin.toFixed(1)}`;
+
+  document.getElementById("biggestBlowoutDetail")
+    .textContent =
+      `${biggestBlowout.year} · Matchup ${biggestBlowout.matchupPeriod} · over ${blowoutLoser}`;
+
+
+  const closestMargin =
+    Math.abs(
+      closestGame.homeScore -
+      closestGame.awayScore
+    );
+
+  document.getElementById("closestGame")
+    .textContent =
+      `${closestMargin.toFixed(1)} points`;
+
+  document.getElementById("closestGameDetail")
+    .textContent =
+      `${closestGame.year} · Matchup ${closestGame.matchupPeriod} · ${closestGame.homeManager} ${closestGame.homeScore.toFixed(1)} – ${closestGame.awayManager} ${closestGame.awayScore.toFixed(1)}`;
+
+}
+  
 
   /*
     Superlatives
