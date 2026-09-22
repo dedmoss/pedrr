@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Full Busch League Archaeology</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #100914;
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+header {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #ff1493, #7928ca);
+}
+
+header h1 {
+  margin: 5px 0;
+  font-size: clamp(36px, 7vw, 68px);
+}
+
+main {
+  max-width: 1100px;
+  margin: 35px auto;
+  padding: 0 20px;
+}
+
+.panel {
+  background: #211329;
+  border: 1px solid #563163;
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 25px;
+}
+
+h2 {
+  color: #ff69bd;
+}
+
+button {
+  background: #ff1493;
+  color: white;
+  border: 0;
+  border-radius: 10px;
+  padding: 14px 22px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: .5;
+}
+
+#status {
+  margin: 20px 0;
+  color: #d9bddf;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 850px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+th {
+  text-align: left;
+  color: #ff8bcb;
+  padding: 10px;
+  border-bottom: 2px solid #563163;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #3a2343;
+}
+
+.good {
+  color: #70ff9a;
+  font-weight: bold;
+}
+
+.bad {
+  color: #ff7070;
+  font-weight: bold;
+}
+
+.warn {
+  color: #ffd970;
+  font-weight: bold;
+}
+
+.year {
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+}
+
+.stat {
+  background: #30193a;
+  padding: 18px;
+  border-radius: 12px;
+}
+
+.stat strong {
+  display: block;
+  font-size: 30px;
+  color: #ff69bd;
+}
+
+pre {
+  white-space: pre-wrap;
+  color: #d9bddf;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div>THE BUSCH LEAGUE</div>
+  <h1>FULL ARCHAEOLOGY</h1>
+  <div>Attempting to recover every completed season: 2010–2025</div>
+</header>
+
+<main>
+
+<section class="panel">
+
+  <h2>🏺 Historical Recovery Test</h2>
+
+  <p>
+    This page tests every completed Busch League season and reports
+    how much historical data ESPN still has.
+  </p>
+
+  <button id="scanButton" onclick="scanHistory()">
+    Scan All 16 Seasons
+  </button>
+
+  <div id="status">
+    Ready to enter the vault.
+  </div>
+
+</section>
+
+
+<section class="panel">
+
+  <h2>📚 Archive Summary</h2>
+
+  <div class="summary">
+
+    <div class="stat">
+      <strong id="seasonCount">0</strong>
+      Seasons Loaded
+    </div>
+
+    <div class="stat">
+      <strong id="teamCount">0</strong>
+      Team-Seasons
+    </div>
+
+    <div class="stat">
+      <strong id="gameCount">0</strong>
+      Matchup Records
+    </div>
+
+    <div class="stat">
+      <strong id="scoreCount">0</strong>
+      Scored Matchups
+    </div>
+
+  </div>
+
+</section>
+
+
+<section class="panel">
+
+  <h2>🔎 Season-by-Season Results</h2>
+
+  <div class="table-wrap">
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th>Status</th>
+          <th>Endpoint</th>
+          <th>Teams</th>
+          <th>Members</th>
+          <th>Matchups</th>
+          <th>Scored</th>
+          <th>Champion Candidate</th>
+        </tr>
+      </thead>
+
+      <tbody id="results"></tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+
+<section class="panel">
+
+  <h2>🧪 Notes</h2>
+
+  <pre id="notes">No scan yet.</pre>
+
+</section>
+
+</main>
+
+
+<script>
+
+const LEAGUE_ID = "530294";
+
+const YEARS = [];
+
+for (let year = 2010; year <= 2025; year++) {
+  YEARS.push(year);
+}
+
+
+function historicalURL(year) {
+
+  return (
+    `https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/leagueHistory/${LEAGUE_ID}` +
+    `?seasonId=${year}` +
+    `&view=mTeam` +
+    `&view=mSettings` +
+    `&view=mMatchup` +
+    `&view=mStandings`
+  );
+
+}
+
+
+function modernURL(year) {
+
+  return (
+    `https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/${year}/segments/0/leagues/${LEAGUE_ID}` +
+    `?view=mTeam` +
+    `&view=mSettings` +
+    `&view=mMatchup` +
+    `&view=mStandings`
+  );
+
+}
+
+
+/*
+  2010–2018:
+  Try leagueHistory first because we have manually confirmed
+  that this works for the Busch League.
+
+  2019–2025:
+  Use the modern season endpoint first.
+
+  If the preferred endpoint fails, try the other one.
+*/
+
+async function fetchSeason(year) {
+
+  const preferred =
+    year <= 2018
+      ? [
+          { name: "leagueHistory", url: historicalURL(year) },
+          { name: "modern fallback", url: modernURL(year) }
+        ]
+      : [
+          { name: "modern", url: modernURL(year) },
+          { name: "leagueHistory fallback", url: historicalURL(year) }
+        ];
+
+
+  let lastError = null;
+
+
+  for (const attempt of preferred) {
+
+    try {
+
+      const response = await fetch(attempt.url, {
+        credentials: "include"
+      });
+
+
+      if (!response.ok) {
+
+        lastError =
+          `HTTP ${response.status}`;
+
+        continue;
+
+      }
+
+
+      let data =
+        await response.json();
+
+
+      /*
+        leagueHistory normally returns:
+        [ { league data } ]
+
+        Modern endpoint normally returns:
+        { league data }
+      */
+
+      if (Array.isArray(data)) {
+
+        if (!data.length) {
+          lastError = "Empty array";
+          continue;
+        }
+
+        data = data[0];
+
+      }
+
+
+      if (!data) {
+        lastError = "No data";
+        continue;
+      }
+
+
+      return {
+        data,
+        endpoint: attempt.name
+      };
+
+    }
+
+    catch(error) {
+
+      lastError =
+        error.message || String(error);
+
+    }
+
+  }
+
+
+  throw new Error(
+    lastError || "Unknown error"
+  );
+
+}
+
+
+function scoredMatchup(game) {
+
+  if (!game.home || !game.away) {
+    return false;
+  }
+
+  const home =
+    Number(game.home.totalPoints);
+
+  const away =
+    Number(game.away.totalPoints);
+
+  return (
+    Number.isFinite(home) &&
+    Number.isFinite(away)
+  );
+
+}
+
+
+function getChampionCandidate(data) {
+
+  const teams =
+    data.teams || [];
+
+  const champion =
+    teams.find(team =>
+      Number(team.rankCalculatedFinal) === 1
+    );
+
+
+  if (!champion) {
+    return "Not identified";
+  }
+
+
+  const membersById = {};
+
+  (data.members || []).forEach(member => {
+
+    membersById[member.id] =
+      `${member.firstName || ""} ${member.lastName || ""}`.trim()
+      || member.displayName
+      || member.id;
+
+  });
+
+
+  const owner =
+    membersById[champion.primaryOwner];
+
+
+  const teamName =
+    champion.name ||
+    `${champion.location || ""} ${champion.nickname || ""}`.trim();
+
+
+  if (owner && teamName) {
+    return `${owner} — ${teamName}`;
+  }
+
+  return owner || teamName || "Team ID " + champion.id;
+
+}
+
+
+async function scanHistory() {
+
+  const button =
+    document.getElementById("scanButton");
+
+  const status =
+    document.getElementById("status");
+
+  const results =
+    document.getElementById("results");
+
+  const notes =
+    document.getElementById("notes");
+
+
+  button.disabled = true;
+
+  results.innerHTML = "";
+
+  notes.textContent = "";
+
+
+  let seasonsLoaded = 0;
+  let totalTeams = 0;
+  let totalGames = 0;
+  let totalScored = 0;
+
+  const failures = [];
+
+
+  for (const year of YEARS) {
+
+    status.textContent =
+      `Digging up ${year}...`;
+
+
+    const row =
+      document.createElement("tr");
+
+
+    row.innerHTML =
+      `<td class="year">${year}</td>` +
+      `<td class="warn">Loading...</td>` +
+      `<td>—</td>` +
+      `<td>—</td>` +
+      `<td>—</td>` +
+      `<td>—</td>` +
+      `<td>—</td>` +
+      `<td>—</td>`;
+
+
+    results.appendChild(row);
+
+
+    try {
+
+      const result =
+        await fetchSeason(year);
+
+      const data =
+        result.data;
+
+
+      const teams =
+        data.teams || [];
+
+      const members =
+        data.members || [];
+
+      const schedule =
+        data.schedule || [];
+
+
+      const scored =
+        schedule.filter(scoredMatchup);
+
+
+      const champion =
+        getChampionCandidate(data);
+
+
+      seasonsLoaded++;
+
+      totalTeams +=
+        teams.length;
+
+      totalGames +=
+        schedule.length;
+
+      totalScored +=
+        scored.length;
+
+
+      row.innerHTML = `
+
+        <td class="year">
+          ${year}
+        </td>
+
+        <td class="good">
+          ✓ LOADED
+        </td>
+
+        <td>
+          ${result.endpoint}
+        </td>
+
+        <td>
+          ${teams.length}
+        </td>
+
+        <td>
+          ${members.length}
+        </td>
+
+        <td>
+          ${schedule.length}
+        </td>
+
+        <td>
+          ${scored.length}
+        </td>
+
+        <td>
+          ${champion}
+        </td>
+
+      `;
+
+
+    }
+
+    catch(error) {
+
+      failures.push(
+        `${year}: ${error.message}`
+      );
+
+
+      row.innerHTML = `
+
+        <td class="year">
+          ${year}
+        </td>
+
+        <td class="bad">
+          ✗ FAILED
+        </td>
+
+        <td>
+          —
+        </td>
+
+        <td>
+          —
+        </td>
+
+        <td>
+          —
+        </td>
+
+        <td>
+          —
+        </td>
+
+        <td>
+          —
+        </td>
+
+        <td>
+          ${error.message}
+        </td>
+
+      `;
+
+    }
+
+
+    document.getElementById("seasonCount")
+      .textContent =
+      seasonsLoaded;
+
+
+    document.getElementById("teamCount")
+      .textContent =
+      totalTeams;
+
+
+    document.getElementById("gameCount")
+      .textContent =
+      totalGames;
+
+
+    document.getElementById("scoreCount")
+      .textContent =
+      totalScored;
+
+  }
+
+
+  if (failures.length === 0) {
+
+    status.innerHTML =
+      `<span class="good">🔥 ALL 16 COMPLETED SEASONS LOADED.</span>`;
+
+    notes.textContent =
+      "2010–2025 all returned data.\n\n" +
+      "Next step: validate champions, manager identities, " +
+      "regular-season lengths and playoff structures before " +
+      "using this data for the production history pages.";
+
+  }
+
+  else {
+
+    status.innerHTML =
+      `<span class="warn">${seasonsLoaded}/16 seasons loaded.</span>`;
+
+    notes.textContent =
+      "Failures:\n\n" +
+      failures.join("\n");
+
+  }
+
+
+  button.disabled = false;
+
+}
+
+</script>
+
+</body>
+</html>
