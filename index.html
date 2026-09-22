@@ -85,35 +85,64 @@
       padding: 15px;
     }
 
-    .teams {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 15px;
-      margin-top: 20px;
-    }
+    .standings-table-wrap {
+  margin-top: 18px;
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #4b2957;
+}
 
-    .team {
-      background: #30193a;
-      border-radius: 14px;
-      padding: 18px;
-      border-left: 5px solid #ff1493;
-    }
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #24112c;
+}
 
-    .team h3 {
-      margin: 0 0 8px;
-      color: #fff;
-    }
+.standings-table th {
+  padding: 14px 16px;
+  text-align: left;
+  background: #35183f;
+  color: #ff72bd;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid #ff1493;
+}
 
-    .owner {
-      color: #ff8bcb;
-      font-size: 14px;
-    }
+.standings-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #45244f;
+  color: #f8eef9;
+}
 
-    .record {
-      margin-top: 10px;
-      font-size: 20px;
-      font-weight: bold;
-    }
+.standings-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.standings-table tbody tr:hover {
+  background: #32163c;
+}
+
+.standings-table .rank {
+  width: 40px;
+  color: #ff72bd;
+  font-weight: bold;
+}
+
+.standings-table .team-name {
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.standings-table .owner {
+  color: #ff8bcb;
+  font-size: 14px;
+}
+
+.standings-table th:nth-child(n+4),
+.standings-table td:nth-child(n+4) {
+  text-align: center;
+}
 
     .loading {
       color: #d9b9dc;
