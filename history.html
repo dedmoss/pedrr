@@ -361,7 +361,7 @@ function getRunnerUp(data) {
     : "Unknown";
 
   return {
-    manager: displayManager(fullName),
+    manager: managerName(fullName),
     team:
       runnerUp.name ||
       `${runnerUp.location || ""} ${runnerUp.nickname || ""}`.trim() ||
