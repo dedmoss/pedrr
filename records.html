@@ -259,12 +259,6 @@ footer {
     </div>
 
     <div class="card">
-      <div class="card-title">😬 Closest Game</div>
-      <div class="card-value" id="closestGame">—</div>
-      <div class="small" id="closestGameDetail"></div>
-    </div>
-
-    <div class="card">
       <div class="card-title">😭 Highest Score in a Loss</div>
       <div class="card-value" id="highestLoss">—</div>
       <div class="small" id="highestLossDetail"></div>
@@ -828,15 +822,7 @@ recordBookGames.forEach(game => {
         Math.abs(a.homeScore - a.awayScore)
       )[0];
 
-  const closestGame =
-   [...recordBookGames]
-      .filter(game =>
-        game.homeScore !== game.awayScore
-      )
-      .sort((a, b) =>
-        Math.abs(a.homeScore - a.awayScore) -
-        Math.abs(b.homeScore - b.awayScore)
-      )[0];
+  
 
 
   function performanceDetail(game) {
@@ -919,21 +905,6 @@ const blowoutLoserScore =
 document.getElementById("biggestBlowoutDetail")
   .textContent =
     `${biggestBlowout.year} · Week ${biggestBlowout.matchupPeriod} · ${blowoutWinner} ${blowoutWinnerScore.toFixed(1)} – ${blowoutLoser} ${blowoutLoserScore.toFixed(1)}`;
-
-
-  const closestMargin =
-    Math.abs(
-      closestGame.homeScore -
-      closestGame.awayScore
-    );
-
-  document.getElementById("closestGame")
-    .textContent =
-      `${closestMargin.toFixed(1)} points`;
-
-  document.getElementById("closestGameDetail")
-    .textContent =
-      `${closestGame.year} · Week ${closestGame.matchupPeriod} · ${closestGame.homeManager} ${closestGame.homeScore.toFixed(1)} – ${closestGame.awayManager} ${closestGame.awayScore.toFixed(1)}`;
 
 }
   
