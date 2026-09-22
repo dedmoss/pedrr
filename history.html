@@ -391,18 +391,30 @@ async function loadHistory() {
 
   try {
 
-    const response = await fetch(
-      "busch-league-history-2010-2018.json"
-    );
+    // Load both halves of the Busch League archive.
+    const responses = await Promise.all([
+      fetch("busch-league-history-2010-2018.json"),
+      fetch("busch-league-history-2019-2025.json")
+    ]);
 
-    if (!response.ok) {
-      throw new Error(
-        `HTTP ${response.status}`
-      );
+    for (const response of responses) {
+      if (!response.ok) {
+        throw new Error(
+          `Archive failed to load: HTTP ${response.status}`
+        );
+      }
     }
 
-    const archive =
-      await response.json();
+    const [oldArchive, modernArchive] =
+      await Promise.all(
+        responses.map(response => response.json())
+      );
+
+    // Merge every completed season into one archive.
+    const archive = {
+      ...oldArchive,
+      ...modernArchive
+    };
 
     const years =
       Object.keys(archive)
@@ -445,7 +457,7 @@ async function loadHistory() {
 
 
 loadHistory();
-
+  
 </script>
 
 </body>
