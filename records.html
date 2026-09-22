@@ -518,8 +518,12 @@ for (const year of years) {
   allGames.push({
     year,
     matchupPeriod:
-      matchup.matchupPeriodId,
-    homeManager:
+  matchup.matchupPeriodId,
+regularSeasonLength:
+  Number(
+    data.settings?.scheduleSettings?.matchupPeriodCount || 0
+  ),
+homeManager:
       homeTeam.manager,
     homeTeam:
       homeTeam.team,
@@ -746,9 +750,19 @@ document
 if (allGames.length) {
 
   const recordBookGames =
-  allGames.filter(game =>
-    !(game.year === 2011 && game.matchupPeriod > 12)
-  );
+  allGames.filter(game => {
+
+    if (game.year === 2010 && game.matchupPeriod > 13) {
+      return false;
+    }
+
+    if (game.year === 2011 && game.matchupPeriod > 12) {
+      return false;
+    }
+
+    return true;
+
+  });
 
 const performances = [];
 
@@ -757,6 +771,7 @@ recordBookGames.forEach(game => {
     performances.push({
       year: game.year,
       matchupPeriod: game.matchupPeriod,
+      regularSeasonLength: game.regularSeasonLength,
       manager: game.homeManager,
       team: game.homeTeam,
       score: game.homeScore,
@@ -767,6 +782,7 @@ recordBookGames.forEach(game => {
     performances.push({
       year: game.year,
       matchupPeriod: game.matchupPeriod,
+      regularSeasonLength: game.regularSeasonLength,
       manager: game.awayManager,
       team: game.awayTeam,
       score: game.awayScore,
@@ -783,7 +799,10 @@ recordBookGames.forEach(game => {
 
   const lowestScore =
   [...performances]
-    .filter(game => game.score > 0)
+    .filter(game =>
+      game.score > 0 &&
+      game.matchupPeriod <= game.regularSeasonLength
+    )
     .sort((a, b) => a.score - b.score)[0];
 
   const highestLoss =
