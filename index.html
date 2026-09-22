@@ -155,7 +155,22 @@
       Attempting to contact ESPN headquarters...
     </div>
 
-    <div class="teams" id="teams"></div>
+    <div class="standings-table-wrap">
+  <table class="standings-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Team</th>
+        <th>Manager</th>
+        <th>W</th>
+        <th>L</th>
+        <th>T</th>
+        <th>Win %</th>
+      </tr>
+    </thead>
+    <tbody id="teams"></tbody>
+  </table>
+</div>
   </section>
 
   <section class="panel" id="history">
@@ -214,30 +229,75 @@
       }
 
       const sortedTeams = [...data.teams].sort((a, b) => {
-        const aWins = a.record?.overall?.wins || 0;
-        const bWins = b.record?.overall?.wins || 0;
-        return bWins - aWins;
-      });
 
-      sortedTeams.forEach(team => {
-        const ownerId = team.primaryOwner;
-        const ownerName = members[ownerId] || "Unknown Naughtyboy";
+  const aRecord = a.record?.overall || {};
+  const bRecord = b.record?.overall || {};
 
-        const wins = team.record?.overall?.wins ?? 0;
-        const losses = team.record?.overall?.losses ?? 0;
-        const ties = team.record?.overall?.ties ?? 0;
+  const aGames =
+    (aRecord.wins || 0) +
+    (aRecord.losses || 0) +
+    (aRecord.ties || 0);
 
-        const card = document.createElement("div");
-        card.className = "team";
+  const bGames =
+    (bRecord.wins || 0) +
+    (bRecord.losses || 0) +
+    (bRecord.ties || 0);
 
-        card.innerHTML = `
-  <h3>${team.name || `${team.location || ""} ${team.nickname || ""}`}</h3>
-  <div class="owner">${ownerName}</div>
-  <div class="record">${wins}-${losses}-${ties}</div>
-`;
+  const aPct =
+    aGames
+      ? ((aRecord.wins || 0) + (aRecord.ties || 0) * 0.5) / aGames
+      : 0;
 
-        teamsBox.appendChild(card);
-      });
+  const bPct =
+    bGames
+      ? ((bRecord.wins || 0) + (bRecord.ties || 0) * 0.5) / bGames
+      : 0;
+
+  return bPct - aPct;
+});
+
+sortedTeams.forEach((team, index) => {
+
+  const ownerId = team.primaryOwner;
+  const ownerName =
+    members[ownerId] || "Unknown Naughtyboy";
+
+  const wins =
+    team.record?.overall?.wins ?? 0;
+
+  const losses =
+    team.record?.overall?.losses ?? 0;
+
+  const ties =
+    team.record?.overall?.ties ?? 0;
+
+  const games =
+    wins + losses + ties;
+
+  const winPct =
+    games
+      ? ((wins + ties * 0.5) / games) * 100
+      : 0;
+
+  const teamName =
+    team.name ||
+    `${team.location || ""} ${team.nickname || ""}`.trim();
+
+  const row =
+    document.createElement("tr");
+
+  row.innerHTML = `
+    <td class="rank">${index + 1}</td>
+    <td class="team-name">${teamName}</td>
+    <td class="owner">${ownerName}</td>
+    <td>${wins}</td>
+    <td>${losses}</td>
+    <td>${ties}</td>
+    <td>${winPct.toFixed(1)}%</td>
+  `;
+
+  teamsBox.appendChild(row);
+});
 
     } catch (error) {
       console.error(error);
