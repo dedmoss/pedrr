@@ -231,6 +231,21 @@
   const statusBox = document.getElementById("status");
   const teamsBox = document.getElementById("teams");
 
+  const managerNames = {
+  "dedmoss": "CMSH",
+  "danrewvos": "Vos",
+  "Fantasy Football Team, Pete": "Peter",
+  "dcm341": "David",
+  "adachit@gmail.com": "Tats",
+  "SeamusJ": "Timmy",
+  "cameronjwilliams14": "Cam",
+  "mumets14": "Matt",
+  "Trevor8434": "Trevor",
+  "mriotta": "Michele",
+  "WRLJ9688": "Randy",
+  "TheDamnScott": "Geoff"
+};
+  
   async function loadLeague() {
     const url =
       `https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/${SEASON}/segments/0/leagues/${LEAGUE_ID}?view=mTeam`;
@@ -288,8 +303,11 @@
 sortedTeams.forEach((team, index) => {
 
   const ownerId = team.primaryOwner;
-  const ownerName =
-    members[ownerId] || "Unknown Naughtyboy";
+  const espnName =
+  members[ownerId] || "Unknown Naughtyboy";
+
+const ownerName =
+  managerNames[espnName] || espnName;
 
   const wins =
     team.record?.overall?.wins ?? 0;
