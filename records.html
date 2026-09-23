@@ -146,12 +146,8 @@ footer {
   color: #a98daf;
   padding: 35px;
 }
-tr.alumni td {
-  color: #777;
-}
-
-tr.alumni .manager {
-  color: #888;
+#leaderboard tr[style] td {
+  color: inherit;
 }
   
 </style>
@@ -680,13 +676,13 @@ function sortLeaderboard(key) {
     const row =
       document.createElement("tr");
 
-    if (!currentNaughtyboyz.includes(displayName(manager.name))) {
-  row.classList.add("alumni");
+    if (!currentNaughtyboyz.includes(manager.name)) {
+  row.style.color = "#777";
 }
     
     row.innerHTML = `
       <td class="rank">${index + 1}</td>
-      <td class="manager">${manager.name}</td>
+      <td class="manager" style="color: inherit;">${manager.name}</td>
       <td>${manager.wins}</td>
       <td>${manager.losses}</td>
       <td>${manager.ties}</td>
