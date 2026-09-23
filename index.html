@@ -187,16 +187,17 @@
     <div class="standings-table-wrap">
   <table class="standings-table">
     <thead>
-      <tr>
-        <th>#</th>
-        <th>Team</th>
-        <th>Manager</th>
-        <th>W</th>
-        <th>L</th>
-        <th>T</th>
-        <th>Win %</th>
-      </tr>
-    </thead>
+  <tr>
+    <th>#</th>
+    <th>Team</th>
+    <th>Naughtyboy</th>
+    <th>W</th>
+    <th>L</th>
+    <th>T</th>
+    <th>PF</th>
+    <th>PA</th>
+  </tr>
+</thead>
     <tbody id="teams"></tbody>
   </table>
 </div>
@@ -245,6 +246,7 @@
   "WRLJ9688": "Randy",
   "TheDamnScott": "Geoff"
 };
+
   
   async function loadLeague() {
     const url =
@@ -316,15 +318,13 @@ const ownerName =
     team.record?.overall?.losses ?? 0;
 
   const ties =
-    team.record?.overall?.ties ?? 0;
+  team.record?.overall?.ties ?? 0;
 
-  const games =
-    wins + losses + ties;
+const pointsFor =
+  team.record?.overall?.pointsFor ?? 0;
 
-  const winPct =
-    games
-      ? ((wins + ties * 0.5) / games) * 100
-      : 0;
+const pointsAgainst =
+  team.record?.overall?.pointsAgainst ?? 0;
 
   const teamName =
     team.name ||
@@ -334,14 +334,15 @@ const ownerName =
     document.createElement("tr");
 
   row.innerHTML = `
-    <td class="rank">${index + 1}</td>
-    <td class="team-name">${teamName}</td>
-    <td class="owner">${ownerName}</td>
-    <td>${wins}</td>
-    <td>${losses}</td>
-    <td>${ties}</td>
-    <td>${winPct.toFixed(1)}%</td>
-  `;
+  <td class="rank">${index + 1}</td>
+  <td class="team-name">${teamName}</td>
+  <td class="owner">${ownerName}</td>
+  <td>${wins}</td>
+  <td>${losses}</td>
+  <td>${ties}</td>
+  <td>${pointsFor.toFixed(1)}</td>
+  <td>${pointsAgainst.toFixed(1)}</td>
+`;
 
   teamsBox.appendChild(row);
 });
