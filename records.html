@@ -618,9 +618,9 @@ homeManager:
 
   });
 
-  let sortKey = "wins";
+  let sortKey = null;
 let sortDirection = "desc";
-
+  
 function sortLeaderboard(key) {
 
   if (sortKey === key) {
@@ -722,7 +722,8 @@ document
 
   });
   
-
+sortLeaderboard("wins");
+  
   /*
     Championship history
   */
