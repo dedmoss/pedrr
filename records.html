@@ -680,7 +680,7 @@ function sortLeaderboard(key) {
     const row =
       document.createElement("tr");
 
-    if (!currentNaughtyboyz.includes(manager.name)) {
+    if (!currentNaughtyboyz.includes(displayName(manager.name))) {
   row.classList.add("alumni");
 }
     
