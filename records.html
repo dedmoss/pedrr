@@ -685,10 +685,17 @@ function sortLeaderboard(key) {
     if (!currentNaughtyboyz.includes(manager.name)) {
   row.style.color = "#777";
 }
+    const foundingNaughtyboyz = [
+  "CMSH", "David", "Vos", "Geoff", "Tats", "Michele", "Randy"
+];
+
+const displayName = foundingNaughtyboyz.includes(manager.name)
+  ? `${manager.name}*`
+  : manager.name;
     
     row.innerHTML = `
       <td class="rank">${index + 1}</td>
-      <td class="manager" style="color: inherit;">${manager.name}</td>
+      <td class="manager" style="color: inherit;">${displayName}</td>
       <td>${manager.wins}</td>
       <td>${manager.losses}</td>
       <td>${manager.ties}</td>
