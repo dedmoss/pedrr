@@ -146,6 +146,14 @@ footer {
   color: #a98daf;
   padding: 35px;
 }
+tr.alumni td {
+  color: #777;
+}
+
+tr.alumni .manager {
+  color: #888;
+}
+  
 </style>
 </head>
 
@@ -647,6 +655,21 @@ function sortLeaderboard(key) {
 
   leaderboard.innerHTML = "";
 
+  const currentNaughtyboyz = [
+  "CMSH",
+  "Vos",
+  "Peter",
+  "David",
+  "Tats",
+  "Timmy",
+  "Cam",
+  "Matt",
+  "Trevor",
+  "Michele",
+  "Randy",
+  "Geoff"
+];
+  
   managerList.forEach((manager, index) => {
 
     const trophies =
@@ -657,6 +680,10 @@ function sortLeaderboard(key) {
     const row =
       document.createElement("tr");
 
+    if (!currentNaughtyboyz.includes(manager.name)) {
+  row.classList.add("alumni");
+}
+    
     row.innerHTML = `
       <td class="rank">${index + 1}</td>
       <td class="manager">${manager.name}</td>
