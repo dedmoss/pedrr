@@ -292,7 +292,7 @@
     .champ-grid { grid-template-columns: 1fr; }
     .stat-row { grid-template-columns: 1fr; gap: 4px; padding: 10px 0; }
     table { min-width: 720px; }
-    #leaderboard-view { overflow-x: auto; }
+    #leaderboard-view, #playoffs-view, #alltime-view { overflow-x: auto; }
   }
 </style>
 </head>
@@ -304,8 +304,9 @@
     <div class="subbrand">Busch League database<br>Est. 2010</div>
 
     <nav class="menu" aria-label="League records">
-      <button class="nav-btn active" data-view="leaderboard-view" data-title="All-Time Regular Season">[ ALL-TIME REGULAR SEASON ]</button>
-      <button class="nav-btn" data-view="playoffs-view" data-title="Playoff Records">[ PLAYOFF RECORDS ]</button>
+      <button class="nav-btn active" data-view="leaderboard-view" data-title="Regular Season">[ REGULAR SEASON ]</button>
+      <button class="nav-btn" data-view="playoffs-view" data-title="Playoffs">[ PLAYOFFS ]</button>
+      <button class="nav-btn" data-view="alltime-view" data-title="All-Time">[ ALL-TIME ]</button>
       <button class="nav-btn" data-view="championships-view" data-title="Championship History">[ CHAMPIONSHIP HISTORY ]</button>
       <button class="nav-btn" data-view="superlatives-view" data-title="League Superlatives">[ LEAGUE SUPERLATIVES ]</button>
       <button class="nav-btn" data-view="records-view" data-title="Record Book">[ RECORD BOOK ]</button>
@@ -320,7 +321,7 @@
 
   <main class="main">
     <div class="topline">
-      <span id="view-title">ALL-TIME REGULAR SEASON</span>
+      <span id="view-title">REGULAR SEASON</span>
       <span class="right">PEDRR© // ARCHIVE ONLINE</span>
     </div>
 
@@ -367,6 +368,29 @@
       <div id="playoff-note" class="footnote" hidden>
         * FOUNDING NAUGHTYBOY // DIMMED NAMES = FORMER MEMBERS // CONSOLATION + 3RD-PLACE GAMES EXCLUDED.<br>
         2010-11 PLAYOFF SERIES LASTED TWO NFL WEEKS: EACH SERIES COUNTS AS ONE W/L; PF/PA USE ESPN'S AGGREGATE SERIES SCORE.
+      </div>
+    </section>
+
+    <section id="alltime-view" class="view">
+      <div class="hint">REGULAR SEASON + CHAMPIONSHIP-BRACKET PLAYOFFS // CLICK A COLUMN HEADING TO SORT.</div>
+      <table id="alltime-table" hidden>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th data-alltime-sort="name">MANAGER</th>
+            <th data-alltime-sort="wins">W</th>
+            <th data-alltime-sort="losses">L</th>
+            <th data-alltime-sort="ties">T</th>
+            <th data-alltime-sort="winPct">WIN%</th>
+            <th data-alltime-sort="pointsFor">PF</th>
+            <th data-alltime-sort="pointsAgainst">PA</th>
+            <th data-alltime-sort="championships">TITLES</th>
+          </tr>
+        </thead>
+        <tbody id="alltime-leaderboard"></tbody>
+      </table>
+      <div id="alltime-note" class="footnote" hidden>
+        * FOUNDING NAUGHTYBOY // DIMMED NAMES = FORMER MEMBERS // REGULAR SEASON + CHAMPIONSHIP-BRACKET PLAYOFF TOTALS.
       </div>
     </section>
 
@@ -509,6 +533,10 @@ let playoffManagerList = [];
 let playoffSortKey = "wins";
 let playoffSortDirection = "desc";
 
+let allTimeManagerList = [];
+let allTimeSortKey = "wins";
+let allTimeSortDirection = "desc";
+
 function renderLeaderboard() {
   const leaderboard = document.getElementById("leaderboard");
 
@@ -640,6 +668,74 @@ document.querySelectorAll("th[data-playoff-sort]").forEach(function(header) {
     }
 
     renderPlayoffLeaderboard();
+  });
+});
+
+function renderAllTimeLeaderboard() {
+  const leaderboard = document.getElementById("alltime-leaderboard");
+
+  allTimeManagerList.sort(function(a, b) {
+    let comparison;
+
+    if (allTimeSortKey === "name") {
+      comparison = a.name.localeCompare(b.name);
+    } else {
+      comparison = Number(a[allTimeSortKey] || 0) - Number(b[allTimeSortKey] || 0);
+    }
+
+    return allTimeSortDirection === "asc" ? comparison : -comparison;
+  });
+
+  leaderboard.innerHTML = "";
+
+  allTimeManagerList.forEach(function(manager, index) {
+    const row = document.createElement("tr");
+
+    if (!CURRENT_NAUGHTYBOYZ.includes(manager.name)) {
+      row.className = "alumni";
+    }
+
+    const shownName = FOUNDING_NAUGHTYBOYZ.includes(manager.name)
+      ? manager.name + "*"
+      : manager.name;
+
+    row.innerHTML =
+      '<td>' + (index + 1) + '</td>' +
+      '<td class="manager">' + shownName + '</td>' +
+      '<td>' + manager.wins + '</td>' +
+      '<td>' + manager.losses + '</td>' +
+      '<td>' + manager.ties + '</td>' +
+      '<td>' + manager.winPct.toFixed(1) + '%</td>' +
+      '<td>' + manager.pointsFor.toFixed(1) + '</td>' +
+      '<td>' + manager.pointsAgainst.toFixed(1) + '</td>' +
+      '<td>' + manager.championships + '</td>';
+
+    leaderboard.appendChild(row);
+  });
+
+  document.querySelectorAll("th[data-alltime-sort]").forEach(function(header) {
+    const base = header.dataset.alltimeLabel ||
+      header.textContent.replace(/[▲▼]/g, "").trim();
+
+    header.dataset.alltimeLabel = base;
+    header.textContent = header.dataset.alltimeSort === allTimeSortKey
+      ? base + " " + (allTimeSortDirection === "asc" ? "▲" : "▼")
+      : base;
+  });
+}
+
+document.querySelectorAll("th[data-alltime-sort]").forEach(function(header) {
+  header.addEventListener("click", function() {
+    const key = header.dataset.alltimeSort;
+
+    if (allTimeSortKey === key) {
+      allTimeSortDirection = allTimeSortDirection === "desc" ? "asc" : "desc";
+    } else {
+      allTimeSortKey = key;
+      allTimeSortDirection = key === "name" ? "asc" : "desc";
+    }
+
+    renderAllTimeLeaderboard();
   });
 });
 
@@ -910,6 +1006,38 @@ async function buildSite() {
     renderPlayoffLeaderboard();
     document.getElementById("playoff-table").hidden = false;
     document.getElementById("playoff-note").hidden = false;
+
+    allTimeManagerList = managerList.map(function(manager) {
+      const playoff = playoffManagers[manager.name] || {
+        wins: 0,
+        losses: 0,
+        ties: 0,
+        pointsFor: 0,
+        pointsAgainst: 0
+      };
+
+      const combined = {
+        name: manager.name,
+        wins: manager.wins + playoff.wins,
+        losses: manager.losses + playoff.losses,
+        ties: manager.ties + playoff.ties,
+        pointsFor: manager.pointsFor + playoff.pointsFor,
+        pointsAgainst: manager.pointsAgainst + playoff.pointsAgainst,
+        championships: manager.championships,
+        winPct: 0
+      };
+
+      const games = combined.wins + combined.losses + combined.ties;
+      combined.winPct = games
+        ? ((combined.wins + combined.ties * 0.5) / games) * 100
+        : 0;
+
+      return combined;
+    });
+
+    renderAllTimeLeaderboard();
+    document.getElementById("alltime-table").hidden = false;
+    document.getElementById("alltime-note").hidden = false;
 
     champions.sort(function(a, b) { return b.year - a.year; });
 
