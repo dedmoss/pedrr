@@ -1,607 +1,856 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Week 3 Power Rankings | The Busch League</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pedrr | The Busch League</title>
+<style>
+  * { box-sizing: border-box; }
 
-  <style>
-    * {
-      box-sizing: border-box;
+  :root {
+    --bg: #050607;
+    --panel: #090b0d;
+    --text: #e6e6e6;
+    --muted: #777;
+    --dim: #4f5357;
+    --line: #565b60;
+    --accent: #ff62b8;
+    --green: #8cff9a;
+  }
+
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Courier New", Courier, monospace;
+  }
+
+  button, table { font: inherit; }
+
+  .app {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    background: var(--bg);
+  }
+
+  .sidebar {
+    min-width: 0;
+    padding: 22px 18px 18px;
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .brand {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .subbrand {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  .menu {
+    margin-top: 38px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .nav-btn {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: #a5a5a5;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .nav-btn:hover { color: #fff; }
+
+  .nav-btn.active {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .nav-btn.active::before {
+    content: "> ";
+    color: #fff;
+  }
+
+  .sidebar-meta {
+    margin-top: auto;
+    color: var(--dim);
+    font-size: 10px;
+    line-height: 1.5;
+    text-transform: uppercase;
+  }
+
+  .main {
+    min-width: 0;
+    min-height: 0;
+    padding: 20px 26px 18px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topline {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .topline .right {
+    color: var(--dim);
+    font-weight: 400;
+  }
+
+  .view {
+    display: none;
+    min-height: 0;
+    flex: 1 1 auto;
+    padding-top: 12px;
+    overflow: hidden;
+  }
+
+  .view.active {
+    display: block;
+  }
+
+  .hint {
+    color: var(--dim);
+    font-size: 10px;
+    margin-bottom: 8px;
+  }
+
+  .error {
+    color: #ff7777;
+    white-space: pre-wrap;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: clamp(10px, 1.05vw, 13px);
+  }
+
+  th, td {
+    padding: 5px 7px;
+    border-bottom: 1px solid #25282b;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  th {
+    color: var(--green);
+    font-weight: 700;
+    cursor: pointer;
+    border-bottom: 1px solid var(--line);
+  }
+
+  th:first-child, td:first-child {
+    width: 36px;
+    text-align: left;
+    color: var(--dim);
+  }
+
+  th:nth-child(2), td:nth-child(2) {
+    width: 150px;
+    text-align: left;
+  }
+
+  th:last-child, td:last-child {
+    width: 58px;
+  }
+
+  tbody tr:hover {
+    background: #0f1215;
+  }
+
+  .manager {
+    font-weight: 700;
+    color: #fff;
+  }
+
+  tr.alumni {
+    color: #61656a;
+  }
+
+  tr.alumni .manager {
+    color: #61656a;
+  }
+
+  .footnote {
+    margin-top: 7px;
+    color: var(--dim);
+    font-size: 10px;
+  }
+
+  .champ-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 42px;
+  }
+
+  .champ-row, .stat-row {
+    min-height: 34px;
+    display: grid;
+    align-items: center;
+    border-bottom: 1px solid #25282b;
+  }
+
+  .champ-row {
+    grid-template-columns: 54px 120px 1fr;
+    gap: 12px;
+    font-size: 13px;
+  }
+
+  .year, .label {
+    color: var(--green);
+  }
+
+  .champ-manager {
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .champ-team {
+    color: #8c9196;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .stats {
+    max-width: 900px;
+  }
+
+  .stat-row {
+    grid-template-columns: 260px 220px 1fr;
+    gap: 18px;
+    min-height: 48px;
+    font-size: 14px;
+  }
+
+  .stat-value {
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .stat-detail {
+    color: #8c9196;
+  }
+
+  .loading {
+    color: var(--green);
+    font-size: 13px;
+    padding-top: 8px;
+  }
+
+  @media (max-width: 850px) {
+    html, body { overflow: auto; }
+    .app {
+      min-height: 100vh;
+      height: auto;
+      grid-template-columns: 1fr;
     }
-
-    html {
-      scroll-behavior: smooth;
+    .sidebar {
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
     }
-
-    body {
-      margin: 0;
-      background:
-        radial-gradient(circle at 50% 0%, #32143d 0%, #160b1c 34%, #0d0811 72%);
-      color: #fff;
-      font-family: Arial, Helvetica, sans-serif;
-      line-height: 1.55;
+    .menu {
+      margin-top: 20px;
+      gap: 10px;
     }
-
-    header {
-  padding: 58px 20px 52px;
-  text-align: center;
-  background:
-    linear-gradient(135deg, #a90f68 0%, #731c87 50%, #4d239d 100%);
-  position: relative;
-  overflow: hidden;
-}
-    header::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        repeating-linear-gradient(
-          -45deg,
-          rgba(255,255,255,.035) 0px,
-          rgba(255,255,255,.035) 2px,
-          transparent 2px,
-          transparent 12px
-        );
-      pointer-events: none;
-    }
-
-    .eyebrow {
-      position: relative;
-      z-index: 1;
-      font-size: 13px;
-      font-weight: 900;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-    }
-    
-.inline-link {
-  color: #ff8bcb;
-  font-weight: 700;
-  text-decoration: underline;
-  text-decoration-color: #8f285f;
-  text-underline-offset: 3px;
-}
-
-.inline-link:hover {
-  color: #fff;
-}
-    h1 {
-      position: relative;
-      z-index: 1;
-      margin: 8px 0 4px;
-      font-size: clamp(44px, 8vw, 86px);
-      line-height: .95;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: -3px;
-    }
-
-    .header-subtitle {
-      position: relative;
-      z-index: 1;
-      margin: 15px 0 0;
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .league-id {
-      position: relative;
-      z-index: 1;
-      margin-top: 7px;
-      opacity: .75;
-      font-size: 12px;
-      letter-spacing: 1px;
-    }
-
-    nav {
-      background: rgba(29, 16, 36, .96);
-      text-align: center;
-      padding: 15px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      border-bottom: 1px solid #4b2957;
-      backdrop-filter: blur(10px);
-    }
-
-    nav a {
-      color: #ff69bd;
-      text-decoration: none;
-      font-weight: 900;
-      margin: 0 14px;
-    }
-
-    nav a:hover {
-      color: #fff;
-    }
-
-    main {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 55px 20px 70px;
-    }
-
-    .rankings-intro {
-      text-align: center;
-      margin-bottom: 42px;
-    }
-
-    .rankings-kicker {
-      color: #ff69bd;
-      font-size: 13px;
-      font-weight: 900;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    .rankings-intro h2 {
-      margin: 0;
-      font-size: clamp(38px, 7vw, 66px);
-      line-height: 1;
-      text-transform: uppercase;
-      letter-spacing: -2px;
-    }
-
-    .powered {
-  display: inline-block;
-  margin-top: 18px;
-  color: #ff8bcb;
-  font-size: 26px;
-  font-weight: 400;
-  font-style: italic;
-}
-.powered sup {
-  font-size: 9px;
-  vertical-align: super;
-  margin-left: 6px;
-  font-style: normal;
-  font-weight: 400;
-}
-    .ranking-card {
-  position: relative;
-  background:
-    linear-gradient(135deg, rgba(79,28,70,.98), rgba(35,16,44,.98));
-  border: 2px solid #ff3ca6;
-  border-radius: 20px;
-      padding: 28px 30px 28px 112px;
-      margin-bottom: 18px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,.18);
-      transition: transform .15s ease, border-color .15s ease;
-    }
-
-    .ranking-card:nth-of-type(even) {
-  background:
-    linear-gradient(135deg, rgba(43,23,52,.97), rgba(29,15,36,.97));
-  border: 1px solid #55305f;
-}
-
-    .ranking-card:hover {
-      transform: translateY(-2px);
-      border-color: #9b4d9f;
-    }
-
-    .ranking-card.top-three {
-      border-color: #8a3c89;
-    }
-
-    .ranking-card.number-one {
-      border: 2px solid #ff3ca6;
-      background:
-        linear-gradient(135deg, rgba(79,28,70,.98), rgba(35,16,44,.98));
-      box-shadow:
-        0 14px 40px rgba(0,0,0,.25),
-        0 0 28px rgba(255,20,147,.09);
-    }
-
-    .rank-number {
-      position: absolute;
-      left: 24px;
-      top: 14px;
-      font-size: 76px;
-      line-height: 1;
-      font-weight: 900;
-      color: rgba(255,105,189,.15);
-      letter-spacing: -7px;
-      user-select: none;
-    }
-
-    .number-one .rank-number {
-      color: rgba(255,105,189,.28);
-    }
-
-    .team-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 14px;
-    }
-
-    .team-name {
-      margin: 0;
-      color: #fff;
-      font-size: clamp(22px, 4vw, 30px);
-      line-height: 1.1;
-      font-weight: 900;
-    }
-
-    .record {
-      display: inline-block;
-      flex-shrink: 0;
-      background: #8f285f;
-      color: #fff;
-      border-radius: 999px;
-      padding: 5px 10px;
-      font-size: 14px;
-      font-weight: 900;
-      letter-spacing: .5px;
-    }
-
-    .ranking-card p {
-      margin: 8px 0;
-      color: #eee1f1;
-      font-size: 18px;
-    }
-
-    ..pedrr-fact {
-  margin: 8px 0;
-  padding: 0;
-  background: none;
-  border: none;
-}
-
-.pedrr-label {
-  display: none;
-}
-
-.pedrr-fact p {
-  margin: 8px 0;
-  color: #eee1f1;
-  font-size: 18px;
-}
-
-    .rankings-footer {
-      margin-top: 45px;
-      padding-top: 25px;
-      border-top: 1px solid #4b2957;
-      text-align: center;
-      color: #a98daf;
-      font-size: 12px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-
-    footer {
-      text-align: center;
-      padding: 35px 20px;
-      background: #0b070e;
-      border-top: 1px solid #291530;
-      color: #876f8d;
-      font-size: 12px;
-      letter-spacing: 1px;
-    }
-
-    @media (max-width: 650px) {
-      header {
-        padding: 45px 18px 40px;
-      }
-
-      h1 {
-        letter-spacing: -2px;
-      }
-
-      main {
-        padding: 40px 14px 60px;
-      }
-
-      .ranking-card {
-        padding: 24px 20px 24px 74px;
-        border-radius: 16px;
-      }
-
-      .rank-number {
-        left: 15px;
-        top: 17px;
-        font-size: 55px;
-        letter-spacing: -5px;
-      }
-
-      .team-header {
-        gap: 8px;
-      }
-
-      .ranking-card p {
-        font-size: 17px;
-      }
-
-      }
-    }
-  </style>
+    .sidebar-meta { display: none; }
+    .main { min-height: 650px; }
+    .view { overflow: auto; }
+    .champ-grid { grid-template-columns: 1fr; }
+    .stat-row { grid-template-columns: 1fr; gap: 4px; padding: 10px 0; }
+    table { min-width: 720px; }
+    #leaderboard-view { overflow-x: auto; }
+  }
+</style>
 </head>
-
 <body>
 
-<header>
-  <div class="eyebrow">Home of the Naughtyboyz</div>
-  <h1>The Busch League</h1>
-  <div class="league-id">EST. 2010</div>
-</header>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">PEDRR.COM</div>
+    <div class="subbrand">Busch League database<br>Est. 2010</div>
 
-<nav>
-  <a href="/">Week 3 Power Rankings</a>
-  <a href="/records.html">Records</a>
-</nav>
+    <nav class="menu" aria-label="League records">
+      <button class="nav-btn active" data-view="leaderboard-view" data-title="All-Time Leaderboard">[ ALL-TIME LEADERBOARD ]</button>
+      <button class="nav-btn" data-view="championships-view" data-title="Championship History">[ CHAMPIONSHIP HISTORY ]</button>
+      <button class="nav-btn" data-view="superlatives-view" data-title="League Superlatives">[ LEAGUE SUPERLATIVES ]</button>
+      <button class="nav-btn" data-view="records-view" data-title="Record Book">[ RECORD BOOK ]</button>
+    </nav>
 
-<main>
+    <div class="sidebar-meta">
+      ESPN LEAGUE 530294<br>
+      ARCHIVE 2010-2025<br>
+      NAUGHTYBOYZ FOREVER
+    </div>
+  </aside>
 
-  <section class="rankings-intro">
-    <div class="rankings-kicker">Busch League 2026</div>
-    <h2>Week 3 Power Rankings</h2>
-<div class="powered">with insights powered by Pedrr<sup>©</sup></div>
-  </section>
-
-
-  <!-- #1 DAVID -->
-  <article class="ranking-card number-one">
-    <div class="rank-number">1</div>
-
-    <div class="team-header">
-      <h3 class="team-name">Lamb of Godwin</h3>
-      <span class="record">1-1</span>
+  <main class="main">
+    <div class="topline">
+      <span id="view-title">ALL-TIME LEADERBOARD</span>
+      <span class="right">PEDRR© // ARCHIVE ONLINE</span>
     </div>
 
-    <p>
-  David is 1-1 (.500). His all-time historical record is
-  107-106-1 (.501).
-</p>
+    <section id="leaderboard-view" class="view active">
+      <div class="hint">CLICK A COLUMN HEADING TO SORT.</div>
+      <div id="loading" class="loading">READING ARCHIVES...</div>
+      <table id="leaderboard-table" hidden>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th data-sort="name">MANAGER</th>
+            <th data-sort="wins">W</th>
+            <th data-sort="losses">L</th>
+            <th data-sort="ties">T</th>
+            <th data-sort="winPct">WIN%</th>
+            <th data-sort="pointsFor">PF</th>
+            <th data-sort="pointsAgainst">PA</th>
+            <th data-sort="championships">TITLES</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard"></tbody>
+      </table>
+      <div id="leaderboard-note" class="footnote" hidden>* FOUNDING NAUGHTYBOY // DIMMED NAMES = FORMER MEMBERS</div>
+    </section>
 
-<p>
-  David was our inaugural champion, winning Busch Bowl I in 2010 —
-  but did you know he was 6-6-1 (.500) in the regular season that
-  year? How did he even make the playoffs?!
-</p>
-</article>
+    <section id="championships-view" class="view">
+      <div id="champions" class="champ-grid"></div>
+    </section>
 
-  <!-- #2 TREVOR -->
-  <article class="ranking-card top-three">
-    <div class="rank-number">2</div>
+    <section id="superlatives-view" class="view">
+      <div class="stats">
+        <div class="stat-row">
+          <div class="label">MOST CAREER WINS</div>
+          <div class="stat-value" id="mostWins">—</div>
+          <div class="stat-detail" id="mostWinsDetail"></div>
+        </div>
+        <div class="stat-row">
+          <div class="label">MOST CAREER POINTS</div>
+          <div class="stat-value" id="mostPoints">—</div>
+          <div class="stat-detail" id="mostPointsDetail"></div>
+        </div>
+        <div class="stat-row">
+          <div class="label">BEST WIN PERCENTAGE</div>
+          <div class="stat-value" id="bestPct">—</div>
+          <div class="stat-detail" id="bestPctDetail"></div>
+        </div>
+        <div class="stat-row">
+          <div class="label">MOST CHAMPIONSHIPS</div>
+          <div class="stat-value" id="mostTitles">—</div>
+          <div class="stat-detail" id="mostTitlesDetail"></div>
+        </div>
+      </div>
+    </section>
 
-    <div class="team-header">
-      <h3 class="team-name">Lemnparty.org</h3>
-      <span class="record">1-1</span>
-    </div>
+    <section id="records-view" class="view">
+      <div class="stats">
+        <div class="stat-row">
+          <div class="label">HIGHEST SCORE</div>
+          <div class="stat-value" id="highestScore">—</div>
+          <div class="stat-detail" id="highestScoreDetail"></div>
+        </div>
+        <div class="stat-row">
+          <div class="label">LOWEST SCORE</div>
+          <div class="stat-value" id="lowestScore">—</div>
+          <div class="stat-detail" id="lowestScoreDetail"></div>
+        </div>
+        <div class="stat-row">
+          <div class="label">BIGGEST BLOWOUT</div>
+          <div class="stat-value" id="biggestBlowout">—</div>
+          <div class="stat-detail" id="biggestBlowoutDetail"></div>
+        </div>
+        <div class="stat-row">
+          <div class="label">HIGHEST SCORE IN A LOSS</div>
+          <div class="stat-value" id="highestLoss">—</div>
+          <div class="stat-detail" id="highestLossDetail"></div>
+        </div>
+        <div class="stat-row">
+          <div class="label">LOWEST SCORE IN A WIN</div>
+          <div class="stat-value" id="lowestWin">—</div>
+          <div class="stat-detail" id="lowestWinDetail"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
 
-    <p>
-      All-time, Trevor is 10th in wins, 10th in losses, 10th in points for
-      and 10th in points against. But he’s #2 in these ranks and #1 at not
-      using condoms.
-    </p>
+<script>
+const ARCHIVE_FILES = [
+  "busch-league-history-2010-2018.json",
+  "busch-league-history-2019-2025.json"
+];
 
-    <div class="pedrr-fact">
-      <span class="pedrr-label">Pedrr Historical Intelligence</span>
-      <p>
-        He’s also responsible for the greatest ass-kicking in league history:
-        a 176 - 69 annihilation of Randy in Week 13, 2014.
-      </p>
-    </div>
-  </article>
+const NAME_MAP = {
+  "Geoffrey Gund": "Geoff",
+  "Tatsuya Adachi": "Tats",
+  "Doug Moss": "CMSH",
+  "Douglas Vos": "Vos",
+  "David Moss": "David",
+  "David Mos": "David",
+  "Matt Ungaro": "Matt",
+  "Cameron Williams": "Cam",
+  "cameron williams": "Cam",
+  "Sam Propper": "Timmy",
+  "Trevor McGraw": "Trevor",
+  "Randy Lovelace": "Randy",
+  "Michele Riotta": "Michele",
+  "Peter Marton": "Peter",
+  "Shane McGill": "Sh**e",
+  "Jamie Rubin": "Jamie",
+  "Ernest Getz": "Ernie",
+  "Ernmista": "Ernie",
+  "Andrew Roth": "Roth"
+};
 
+const CURRENT_NAUGHTYBOYZ = [
+  "CMSH", "Vos", "Peter", "David", "Tats", "Timmy",
+  "Cam", "Matt", "Trevor", "Michele", "Randy", "Geoff"
+];
 
-  <!-- #3 PETER -->
-  <article class="ranking-card top-three">
-    <div class="rank-number">3</div>
+const FOUNDING_NAUGHTYBOYZ = [
+  "CMSH", "David", "Vos", "Geoff", "Tats", "Michele", "Randy"
+];
 
-    <div class="team-header">
-      <h3 class="team-name">'never be your beast of burden</h3>
-      <span class="record">2-0</span>
-    </div>
+function displayManagerName(realName) {
+  return NAME_MAP[realName] || realName;
+}
 
-    <div class="pedrr-fact">
-      <span class="pedrr-label">Pedrr Historical Intelligence</span>
-      <p>
-        Pete finished 6th in three consecutive seasons, from 2015-2017.
-      </p>
-    </div>
+function createManager(name) {
+  return {
+    name: name,
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    championships: 0,
+    seasons: 0,
+    winPct: 0
+  };
+}
 
-    <p>
-      Really rough year for team names amirite. But I guess it’s always
-      like that around these parts.
-    </p>
-  </article>
+document.querySelectorAll(".nav-btn").forEach(function(button) {
+  button.addEventListener("click", function() {
+    document.querySelectorAll(".nav-btn").forEach(function(btn) {
+      btn.classList.remove("active");
+    });
+    document.querySelectorAll(".view").forEach(function(view) {
+      view.classList.remove("active");
+    });
 
+    button.classList.add("active");
+    document.getElementById(button.dataset.view).classList.add("active");
+    document.getElementById("view-title").textContent = button.dataset.title;
+  });
+});
 
-  <!-- #4 CAM -->
-  <article class="ranking-card">
-    <div class="rank-number">4</div>
+let managerList = [];
+let sortKey = "wins";
+let sortDirection = "desc";
 
-    <div class="team-header">
-      <h3 class="team-name">The Power Brocker</h3>
-      <span class="record">1-1</span>
-    </div>
+function renderLeaderboard() {
+  const leaderboard = document.getElementById("leaderboard");
 
-    <div class="pedrr-fact">
-      <span class="pedrr-label">Pedrr Historical Intelligence</span>
-      <p>
-  Cam won the closest matchup in Busch history: In Week 12, 2023,
-  he beat Tats by .04 points!!! This kinda thing really needs to be
-  <a class="inline-link"
-     href="https://fantasy.espn.com/football/boxscore?leagueId=530294&amp;matchupPeriodId=12&amp;scoringPeriodId=12&amp;seasonId=2023&amp;teamId=12&amp;view=scoringperiod"
-     target="_blank"
-     rel="noopener noreferrer">seen to be believed.</a>
-</p>
-    </div>
-  </article>
+  managerList.sort(function(a, b) {
+    let comparison;
 
+    if (sortKey === "name") {
+      comparison = a.name.localeCompare(b.name);
+    } else {
+      comparison = Number(a[sortKey] || 0) - Number(b[sortKey] || 0);
+    }
 
-  <!-- #5 TIMMY -->
-  <article class="ranking-card">
-    <div class="rank-number">5</div>
+    return sortDirection === "asc" ? comparison : -comparison;
+  });
 
-    <div class="team-header">
-      <h3 class="team-name">Thought of Pun</h3>
-      <span class="record">1-1</span>
-    </div>
+  leaderboard.innerHTML = "";
 
-    <div class="pedrr-fact">
-      <span class="pedrr-label">Pedrr Historical Intelligence</span>
-      <p>Timmy is 7-1 all time against Cam.</p>
-    </div>
-  </article>
+  managerList.forEach(function(manager, index) {
+    const row = document.createElement("tr");
 
+    if (!CURRENT_NAUGHTYBOYZ.includes(manager.name)) {
+      row.className = "alumni";
+    }
 
-  <!-- #6 MATT -->
-  <article class="ranking-card">
-    <div class="rank-number">6</div>
+    const shownName = FOUNDING_NAUGHTYBOYZ.includes(manager.name)
+      ? manager.name + "*"
+      : manager.name;
 
-    <div class="team-header">
-      <h3 class="team-name">The Gibbsfather: Part Tuten</h3>
-      <span class="record">1-1</span>
-    </div>
+    row.innerHTML =
+      '<td>' + (index + 1) + '</td>' +
+      '<td class="manager">' + shownName + '</td>' +
+      '<td>' + manager.wins + '</td>' +
+      '<td>' + manager.losses + '</td>' +
+      '<td>' + manager.ties + '</td>' +
+      '<td>' + manager.winPct.toFixed(1) + '%</td>' +
+      '<td>' + manager.pointsFor.toFixed(1) + '</td>' +
+      '<td>' + manager.pointsAgainst.toFixed(1) + '</td>' +
+      '<td>' + manager.championships + '</td>';
 
-    <p>
-      Those of you who are old enough will remember The Age of Mung
-      (2011-2017), when Matt’s giant cock reigned supreme over the
-      league.
-    </p>
+    leaderboard.appendChild(row);
+  });
 
-    <div class="pedrr-fact">
-      <span class="pedrr-label">The Age of Mung</span>
-      <p>
-        In those seven seasons, Matt finished 3rd, 1st, 2nd, 1st,
-        4th, 2nd and 2nd. Savvy vets, indeed. Then, in 2018, he finished
-        12th, donned the green man suit and the Age of Mung was
-        officially over.
-      </p>
-    </div>
+  document.querySelectorAll("th[data-sort]").forEach(function(header) {
+    const base = header.dataset.label || header.textContent.replace(/[▲▼]/g, "").trim();
+    header.dataset.label = base;
+    header.textContent = header.dataset.sort === sortKey
+      ? base + " " + (sortDirection === "asc" ? "▲" : "▼")
+      : base;
+  });
+}
 
-    <p>
-      New Dad Matt starts his paternity leave today - if you’ve got
-      time to kill I highly recommend vibecoding.
-    </p>
-  </article>
+document.querySelectorAll("th[data-sort]").forEach(function(header) {
+  header.addEventListener("click", function() {
+    const key = header.dataset.sort;
 
+    if (sortKey === key) {
+      sortDirection = sortDirection === "desc" ? "asc" : "desc";
+    } else {
+      sortKey = key;
+      sortDirection = key === "name" ? "asc" : "desc";
+    }
 
-  <!-- #7 TATS -->
-  <article class="ranking-card">
-    <div class="rank-number">7</div>
+    renderLeaderboard();
+  });
+});
 
-    <div class="team-header">
-      <h3 class="team-name">Hate Us Cuz They Anus</h3>
-      <span class="record">1-1</span>
-    </div>
+async function getArchive() {
+  const responses = await Promise.all(
+    ARCHIVE_FILES.map(function(file) { return fetch(file); })
+  );
 
-    <div class="pedrr-fact">
-      <span class="pedrr-label">Pedrr Historical Intelligence</span>
-      <p>The Busch League Guy has the most losses of all time (121).</p>
-    </div>
-  </article>
+  responses.forEach(function(response) {
+    if (!response.ok) {
+      throw new Error("Archive failed to load: HTTP " + response.status);
+    }
+  });
 
+  const archives = await Promise.all(
+    responses.map(function(response) { return response.json(); })
+  );
 
-  <!-- #8 RANDY -->
-  <article class="ranking-card">
-    <div class="rank-number">8</div>
+  return Object.assign({}, ...archives);
+}
 
-    <div class="team-header">
-      <h3 class="team-name">Nailor? I Hardly Know Her</h3>
-      <span class="record">0-2</span>
-    </div>
+async function buildSite() {
+  const managers = {};
+  const champions = [];
+  const allGames = [];
 
-    <p>
-      Randy is 4th in wins, 4th in losses, and 4th in the hearts of his
-      wife and children.
-    </p>
-  </article>
+  try {
+    const archive = await getArchive();
 
+    const years = Object.keys(archive)
+      .filter(function(year) { return /^\d{4}$/.test(year); })
+      .map(Number)
+      .sort(function(a, b) { return a - b; });
 
-  <!-- #9 VOS -->
-  <article class="ranking-card">
-    <div class="rank-number">9</div>
+    years.forEach(function(year) {
+      const data = archive[year];
+      const members = {};
 
-    <div class="team-header">
-      <h3 class="team-name">ROOFINooooooo</h3>
-      <span class="record">2-0</span>
-    </div>
+      (data.members || []).forEach(function(member) {
+        const realName =
+          ((member.firstName || "") + " " + (member.lastName || "")).trim() ||
+          member.displayName ||
+          "Unknown";
 
-    <div class="pedrr-fact">
-      <span class="pedrr-label">Pedrr Historical Intelligence</span>
-      <p>
-        There have been two (2) ties in league history and Vos played
-        in both!
-      </p>
-    </div>
-  </article>
+        members[member.id] = realName;
+      });
 
+      (data.teams || []).forEach(function(team) {
+        const realName = members[team.primaryOwner] || "Unknown";
+        const name = displayManagerName(realName);
 
-  <!-- #10 CMSH -->
-  <article class="ranking-card">
-    <div class="rank-number">10</div>
+        if (!managers[name]) {
+          managers[name] = createManager(name);
+        }
 
-    <div class="team-header">
-      <h3 class="team-name">Colston Creamery</h3>
-      <span class="record">2-0</span>
-    </div>
+        const manager = managers[name];
+        const record = (team.record && team.record.overall) || {};
 
-    <p>
-      I am the greatest (regular season) naughtyboy of all-time. My
-      worst-ever finish in the Busch League is 9th, he said from the
-      10th spot in his own power ranks.
-    </p>
-  </article>
+        manager.wins += Number(record.wins || 0);
+        manager.losses += Number(record.losses || 0);
+        manager.ties += Number(record.ties || 0);
+        manager.pointsFor += Number(record.pointsFor || 0);
+        manager.pointsAgainst += Number(record.pointsAgainst || 0);
+        manager.seasons++;
 
+        if (Number(team.rankCalculatedFinal) === 1) {
+          manager.championships++;
+          champions.push({
+            year: year,
+            manager: name,
+            team: team.name || ((team.location || "") + " " + (team.nickname || "")).trim()
+          });
+        }
+      });
 
-  <!-- #11 MICHELE -->
-  <article class="ranking-card">
-    <div class="rank-number">11</div>
+      const teamsById = {};
 
-    <div class="team-header">
-      <h3 class="team-name">Skinny Metcalves</h3>
-      <span class="record">0-2</span>
-    </div>
+      (data.teams || []).forEach(function(team) {
+        const ownerId = team.primaryOwner || (team.owners && team.owners[0]);
+        const realName = members[ownerId] || "Unknown";
 
-    <p>
-      Betrayed by my own ASSCOM but Zezel keeps the score.
-    </p>
+        teamsById[team.id] = {
+          manager: displayManagerName(realName),
+          team: team.name || ((team.location || "") + " " + (team.nickname || "")).trim()
+        };
+      });
 
-    <div class="pedrr-fact">
-      <span class="pedrr-label">Pedrr Historical Intelligence</span>
-      <p>
-        Pedrr reminded me of the assiest Busch matchup of all time:
-        Week 12, 2013, when Mic lost to Trevor 49 - 48.76.
-      </p>
-    </div>
-  </article>
+      (data.schedule || []).forEach(function(matchup) {
+        const home = matchup.home;
+        const away = matchup.away;
 
+        if (!home || !away) return;
 
-  <!-- #12 GEOFF -->
-  <article class="ranking-card">
-    <div class="rank-number">12</div>
+        const homeScore = Number(home.totalPoints);
+        const awayScore = Number(away.totalPoints);
 
-    <div class="team-header">
-      <h3 class="team-name">Ferme LaPorta</h3>
-      <span class="record">0-2</span>
-    </div>
+        if (
+          !Number.isFinite(homeScore) ||
+          !Number.isFinite(awayScore) ||
+          (homeScore === 0 && awayScore === 0)
+        ) return;
 
-    <div class="pedrr-fact">
-      <span class="pedrr-label">Pedrr Historical Intelligence</span>
-      <p>
-        Geoff is #1 all-time in points for and #1 all-time in points against.
-      </p>
-    </div>
-  </article>
+        const homeTeam = teamsById[home.teamId];
+        const awayTeam = teamsById[away.teamId];
 
+        if (!homeTeam || !awayTeam) return;
 
-  <div class="rankings-footer">
-    Rankings determined by science, vibes and an irresponsible use of historical data.
-  </div>
+        allGames.push({
+          year: year,
+          matchupPeriod: matchup.matchupPeriodId,
+          regularSeasonLength: Number(
+            data.settings &&
+            data.settings.scheduleSettings &&
+            data.settings.scheduleSettings.matchupPeriodCount || 0
+          ),
+          homeManager: homeTeam.manager,
+          homeTeam: homeTeam.team,
+          homeScore: homeScore,
+          awayManager: awayTeam.manager,
+          awayTeam: awayTeam.team,
+          awayScore: awayScore
+        });
+      });
+    });
 
-</main>
+    managerList = Object.values(managers);
 
-<footer>
-  THE BUSCH LEAGUE · ESPN 530294 · NAUGHTYBOYZ FOREVER
-</footer>
+    managerList.forEach(function(manager) {
+      const games = manager.wins + manager.losses + manager.ties;
+      manager.winPct = games
+        ? ((manager.wins + manager.ties * 0.5) / games) * 100
+        : 0;
+    });
 
+    renderLeaderboard();
+    document.getElementById("loading").hidden = true;
+    document.getElementById("leaderboard-table").hidden = false;
+    document.getElementById("leaderboard-note").hidden = false;
+
+    champions.sort(function(a, b) { return b.year - a.year; });
+
+    const championsBox = document.getElementById("champions");
+    championsBox.innerHTML = "";
+
+    champions.forEach(function(champion) {
+      const row = document.createElement("div");
+      row.className = "champ-row";
+      row.innerHTML =
+        '<div class="year">' + champion.year + '</div>' +
+        '<div class="champ-manager">' + champion.manager + '</div>' +
+        '<div class="champ-team">' + champion.team + '</div>';
+      championsBox.appendChild(row);
+    });
+
+    if (allGames.length) {
+      const recordBookGames = allGames.filter(function(game) {
+        if (game.year === 2010 && game.matchupPeriod > 13) return false;
+        if (game.year === 2011 && game.matchupPeriod > 12) return false;
+        return true;
+      });
+
+      const performances = [];
+
+      recordBookGames.forEach(function(game) {
+        performances.push({
+          year: game.year,
+          matchupPeriod: game.matchupPeriod,
+          regularSeasonLength: game.regularSeasonLength,
+          manager: game.homeManager,
+          score: game.homeScore,
+          opponent: game.awayManager,
+          opponentScore: game.awayScore
+        });
+
+        performances.push({
+          year: game.year,
+          matchupPeriod: game.matchupPeriod,
+          regularSeasonLength: game.regularSeasonLength,
+          manager: game.awayManager,
+          score: game.awayScore,
+          opponent: game.homeManager,
+          opponentScore: game.homeScore
+        });
+      });
+
+      const highestScore = [...performances]
+        .sort(function(a, b) { return b.score - a.score; })[0];
+
+      const lowestScore = [...performances]
+        .filter(function(game) {
+          return game.score > 0 &&
+            game.matchupPeriod <= game.regularSeasonLength;
+        })
+        .sort(function(a, b) { return a.score - b.score; })[0];
+
+      const highestLoss = [...performances]
+        .filter(function(game) { return game.score < game.opponentScore; })
+        .sort(function(a, b) { return b.score - a.score; })[0];
+
+      const lowestWin = [...performances]
+        .filter(function(game) {
+          return game.score > game.opponentScore && game.opponentScore > 0;
+        })
+        .sort(function(a, b) { return a.score - b.score; })[0];
+
+      const biggestBlowout = [...recordBookGames]
+        .filter(function(game) {
+          return game.matchupPeriod <= game.regularSeasonLength;
+        })
+        .sort(function(a, b) {
+          return Math.abs(b.homeScore - b.awayScore) -
+            Math.abs(a.homeScore - a.awayScore);
+        })[0];
+
+      function performanceDetail(game) {
+        return game.year + " // WK " + game.matchupPeriod +
+          " // VS " + game.opponent + " (" + game.opponentScore.toFixed(1) + ")";
+      }
+
+      document.getElementById("highestScore").textContent =
+        highestScore.manager + " // " + highestScore.score.toFixed(1);
+      document.getElementById("highestScoreDetail").textContent =
+        performanceDetail(highestScore);
+
+      document.getElementById("lowestScore").textContent =
+        lowestScore.manager + " // " + lowestScore.score.toFixed(1);
+      document.getElementById("lowestScoreDetail").textContent =
+        performanceDetail(lowestScore);
+
+      document.getElementById("highestLoss").textContent =
+        highestLoss.manager + " // " + highestLoss.score.toFixed(1);
+      document.getElementById("highestLossDetail").textContent =
+        performanceDetail(highestLoss);
+
+      document.getElementById("lowestWin").textContent =
+        lowestWin.manager + " // " + lowestWin.score.toFixed(1);
+      document.getElementById("lowestWinDetail").textContent =
+        performanceDetail(lowestWin);
+
+      const blowoutWinner = biggestBlowout.homeScore > biggestBlowout.awayScore
+        ? biggestBlowout.homeManager
+        : biggestBlowout.awayManager;
+
+      const blowoutLoser = biggestBlowout.homeScore > biggestBlowout.awayScore
+        ? biggestBlowout.awayManager
+        : biggestBlowout.homeManager;
+
+      const blowoutWinnerScore = Math.max(
+        biggestBlowout.homeScore,
+        biggestBlowout.awayScore
+      );
+
+      const blowoutLoserScore = Math.min(
+        biggestBlowout.homeScore,
+        biggestBlowout.awayScore
+      );
+
+      const blowoutMargin = Math.abs(
+        biggestBlowout.homeScore - biggestBlowout.awayScore
+      );
+
+      document.getElementById("biggestBlowout").textContent =
+        blowoutWinner + " // +" + blowoutMargin.toFixed(1);
+
+      document.getElementById("biggestBlowoutDetail").textContent =
+        biggestBlowout.year + " // WK " + biggestBlowout.matchupPeriod +
+        " // " + blowoutWinner + " " + blowoutWinnerScore.toFixed(1) +
+        " - " + blowoutLoser + " " + blowoutLoserScore.toFixed(1);
+    }
+
+    const byWins = [...managerList]
+      .sort(function(a, b) { return b.wins - a.wins; })[0];
+
+    const byPoints = [...managerList]
+      .sort(function(a, b) { return b.pointsFor - a.pointsFor; })[0];
+
+    const byPct = [...managerList]
+      .sort(function(a, b) { return b.winPct - a.winPct; })[0];
+
+    const byTitles = [...managerList]
+      .sort(function(a, b) {
+        return b.championships - a.championships || b.wins - a.wins;
+      })[0];
+
+    document.getElementById("mostWins").textContent = byWins ? byWins.name : "—";
+    document.getElementById("mostWinsDetail").textContent =
+      byWins ? byWins.wins + " CAREER WINS" : "";
+
+    document.getElementById("mostPoints").textContent = byPoints ? byPoints.name : "—";
+    document.getElementById("mostPointsDetail").textContent =
+      byPoints ? byPoints.pointsFor.toFixed(1) + " CAREER POINTS" : "";
+
+    document.getElementById("bestPct").textContent = byPct ? byPct.name : "—";
+    document.getElementById("bestPctDetail").textContent =
+      byPct ? byPct.winPct.toFixed(1) + "% CAREER WIN RATE" : "";
+
+    document.getElementById("mostTitles").textContent = byTitles ? byTitles.name : "—";
+    document.getElementById("mostTitlesDetail").textContent =
+      byTitles ? byTitles.championships + " CHAMPIONSHIPS" : "";
+  } catch (error) {
+    console.error(error);
+    const loading = document.getElementById("loading");
+    loading.className = "error";
+    loading.textContent = "ERROR: " + error.message;
+  }
+}
+
+buildSite();
+</script>
 </body>
 </html>
