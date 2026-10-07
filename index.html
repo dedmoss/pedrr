@@ -211,9 +211,8 @@
   }
 
   .champ-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 42px;
+    display: block;
+    max-width: 900px;
   }
 
   .champ-row, .stat-row {
@@ -224,9 +223,10 @@
   }
 
   .champ-row {
-    grid-template-columns: 54px 120px 1fr;
-    gap: 12px;
-    font-size: 13px;
+    grid-template-columns: 90px 220px 1fr;
+    gap: 18px;
+    min-height: 48px;
+    font-size: 14px;
   }
 
   .year, .label {
