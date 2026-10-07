@@ -24,19 +24,19 @@
   }
 
   html.pink {
-    --bg: #ff1493;
-    --panel: #e9007f;
-    --text: #240015;
-    --muted: #5f173f;
-    --dim: #7c2455;
-    --line: #9b0058;
-    --row-line: #cf0b78;
-    --hover: #ff4aae;
-    --strong: #120009;
-    --alumni: #8c3d68;
-    --secondary: #54112f;
-    --accent: #ffffff;
-    --green: #102d18;
+    --bg: #ff8fcb;
+    --panel: #ff7bc2;
+    --text: #260014;
+    --muted: #5b2942;
+    --dim: #75445d;
+    --line: #9e4e77;
+    --row-line: #d36b9f;
+    --hover: #ffabd9;
+    --strong: #140009;
+    --alumni: #98667f;
+    --secondary: #5a2841;
+    --accent: #8a004d;
+    --green: #174d27;
   }
 
   html, body {
@@ -88,7 +88,7 @@
     appearance: none;
     border: 0;
     background: transparent;
-    color: #a5a5a5;
+    color: var(--muted);
     padding: 0;
     text-align: left;
     cursor: pointer;
@@ -699,29 +699,13 @@ function applyTheme(theme) {
   );
 }
 
-let savedTheme = null;
-
-try {
-  savedTheme = localStorage.getItem("pedrr-theme");
-} catch (error) {
-  savedTheme = null;
-}
-
-applyTheme(
-  savedTheme === "pink" || savedTheme === "light" ? "pink" : "dark"
-);
+applyTheme("dark");
 
 themeToggle.addEventListener("click", function() {
   const nextTheme =
     document.documentElement.classList.contains("pink") ? "dark" : "pink";
 
   applyTheme(nextTheme);
-
-  try {
-    localStorage.setItem("pedrr-theme", nextTheme);
-  } catch (error) {
-    // Theme still works for this visit if storage is unavailable.
-  }
 });
 
 document.querySelectorAll(".nav-btn").forEach(function(button) {
