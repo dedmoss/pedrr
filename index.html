@@ -250,6 +250,10 @@
     padding-top: 16px;
   }
 
+  #playoff-table {
+    width: min(100%, 1220px);
+  }
+
   #leaderboard-view .hint,
   #playoffs-view .hint,
   #alltime-view .hint {
@@ -671,6 +675,8 @@
             <th data-playoff-sort="winPct">WIN%</th>
             <th data-playoff-sort="pointsFor">PF</th>
             <th data-playoff-sort="pointsAgainst">PA</th>
+            <th data-playoff-sort="buschBowlAppearances">BUSCH BOWL APPEARANCES</th>
+            <th data-playoff-sort="buschBowlWins">BUSCH BOWL RECORD</th>
             <th data-playoff-sort="championships">TITLES</th>
           </tr>
         </thead>
@@ -918,6 +924,8 @@ function renderLeaderboard() {
       '<td>' + manager.winPct.toFixed(1) + '%</td>' +
       '<td>' + manager.pointsFor.toFixed(1) + '</td>' +
       '<td>' + manager.pointsAgainst.toFixed(1) + '</td>' +
+      '<td>' + manager.buschBowlAppearances + '</td>' +
+      '<td>' + manager.buschBowlWins + '-' + manager.buschBowlLosses + '</td>' +
       '<td>' + manager.championships + '</td>';
 
     leaderboard.appendChild(row);
@@ -955,6 +963,14 @@ function renderPlayoffLeaderboard() {
 
     if (playoffSortKey === "name") {
       comparison = a.name.localeCompare(b.name);
+    } else if (playoffSortKey === "buschBowlWins") {
+      comparison =
+        Number(a.buschBowlWins || 0) - Number(b.buschBowlWins || 0);
+
+      if (comparison === 0) {
+        comparison =
+          Number(b.buschBowlLosses || 0) - Number(a.buschBowlLosses || 0);
+      }
     } else {
       comparison = Number(a[playoffSortKey] || 0) - Number(b[playoffSortKey] || 0);
     }
@@ -1338,6 +1354,9 @@ async function buildSite() {
         ties: 0,
         pointsFor: 0,
         pointsAgainst: 0,
+        buschBowlAppearances: 0,
+        buschBowlWins: 0,
+        buschBowlLosses: 0,
         championships: 0,
         winPct: 0
       };
@@ -1623,13 +1642,65 @@ async function buildSite() {
     document.getElementById("leaderboard-table").hidden = false;
     document.getElementById("leaderboard-note").hidden = false;
 
+    const buschBowlStats = {};
+
+    function getBuschBowlStats(name) {
+      if (!buschBowlStats[name]) {
+        buschBowlStats[name] = {
+          appearances: 0,
+          wins: 0,
+          losses: 0
+        };
+      }
+
+      return buschBowlStats[name];
+    }
+
+    champions.forEach(function(champion) {
+      const championshipPeriod = Math.max.apply(
+        null,
+        (champion.playoffGames || []).map(function(game) {
+          return Number(game.period || 0);
+        })
+      );
+
+      const finalGame = (champion.playoffGames || []).find(function(game) {
+        return Number(game.period || 0) === championshipPeriod;
+      });
+
+      if (!finalGame) return;
+
+      const homeStats = getBuschBowlStats(finalGame.homeManager);
+      const awayStats = getBuschBowlStats(finalGame.awayManager);
+
+      homeStats.appearances++;
+      awayStats.appearances++;
+
+      if (finalGame.homeScore > finalGame.awayScore) {
+        homeStats.wins++;
+        awayStats.losses++;
+      } else if (finalGame.awayScore > finalGame.homeScore) {
+        awayStats.wins++;
+        homeStats.losses++;
+      }
+    });
+
     playoffManagerList = Object.values(playoffManagers);
 
     playoffManagerList.forEach(function(manager) {
       const games = manager.wins + manager.losses + manager.ties;
+      const bowl = buschBowlStats[manager.name] || {
+        appearances: 0,
+        wins: 0,
+        losses: 0
+      };
+
       manager.winPct = games
         ? ((manager.wins + manager.ties * 0.5) / games) * 100
         : 0;
+      manager.buschBowlAppearances = bowl.appearances;
+      manager.buschBowlWins = bowl.wins;
+      manager.buschBowlLosses = bowl.losses;
       manager.championships =
         managers[manager.name] ? managers[manager.name].championships : 0;
     });
