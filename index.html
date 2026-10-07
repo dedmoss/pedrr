@@ -924,8 +924,6 @@ function renderLeaderboard() {
       '<td>' + manager.winPct.toFixed(1) + '%</td>' +
       '<td>' + manager.pointsFor.toFixed(1) + '</td>' +
       '<td>' + manager.pointsAgainst.toFixed(1) + '</td>' +
-      '<td>' + manager.buschBowlAppearances + '</td>' +
-      '<td>' + manager.buschBowlWins + '-' + manager.buschBowlLosses + '</td>' +
       '<td>' + manager.championships + '</td>';
 
     leaderboard.appendChild(row);
@@ -1000,6 +998,8 @@ function renderPlayoffLeaderboard() {
       '<td>' + manager.winPct.toFixed(1) + '%</td>' +
       '<td>' + manager.pointsFor.toFixed(1) + '</td>' +
       '<td>' + manager.pointsAgainst.toFixed(1) + '</td>' +
+      '<td>' + manager.buschBowlAppearances + '</td>' +
+      '<td>' + manager.buschBowlWins + '-' + manager.buschBowlLosses + '</td>' +
       '<td>' + manager.championships + '</td>';
 
     leaderboard.appendChild(row);
