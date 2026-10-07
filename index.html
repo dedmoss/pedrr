@@ -360,21 +360,6 @@
     font-weight: 700;
   }
 
-  .champ-title-result {
-    margin-bottom: 20px;
-  }
-
-  .champ-title-score {
-    margin-top: 5px;
-    color: var(--strong);
-    font-size: 17px;
-    font-weight: 700;
-  }
-
-  .champ-title-score .winner {
-    color: var(--accent);
-  }
-
   .champ-playoffs {
     margin-bottom: 18px;
   }
@@ -421,28 +406,35 @@
 
   .champ-roster-list {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 30px;
-    row-gap: 4px;
+    grid-template-columns: 1fr;
+    gap: 4px;
     margin-top: 7px;
+    max-width: 520px;
   }
 
   .champ-player {
     display: grid;
-    grid-template-columns: 38px minmax(0, 1fr);
-    gap: 8px;
-    font-size: 11px;
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 10px;
+    font-size: 12px;
   }
 
   .champ-player-pos {
     color: var(--green);
+    font-weight: 700;
   }
 
   .champ-player-name {
-    color: var(--secondary);
+    color: var(--strong);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .champ-player-status {
+    color: var(--dim);
+    font-size: 10px;
+    margin-top: 6px;
   }
 
   .champ-note {
@@ -1348,6 +1340,187 @@ async function getArchive() {
   return Object.assign({}, ...archives);
 }
 
+const championPlayerRankCache = {};
+
+function extractPositionalRanking(row) {
+  const pool = row.playerPoolEntry || row;
+  const ratings = pool.ratings || row.ratings || {};
+  const preferred =
+    ratings["0"] ||
+    ratings.STANDARD ||
+    ratings.standard ||
+    null;
+
+  if (
+    preferred &&
+    Number.isFinite(Number(preferred.positionalRanking)) &&
+    Number(preferred.positionalRanking) > 0
+  ) {
+    return Number(preferred.positionalRanking);
+  }
+
+  const candidates = Object.values(ratings)
+    .map(function(rating) {
+      return Number(rating && rating.positionalRanking);
+    })
+    .filter(function(rank) {
+      return Number.isFinite(rank) && rank > 0;
+    });
+
+  return candidates.length ? Math.min.apply(null, candidates) : null;
+}
+
+async function fetchChampionPlayerRanks(champion) {
+  const year = champion.year;
+
+  if (!championPlayerRankCache[year]) {
+    championPlayerRankCache[year] = (async function() {
+      const ids = (champion.roster || [])
+        .map(function(player) { return Number(player.id || 0); })
+        .filter(function(id) { return id > 0; });
+
+      if (!ids.length) return {};
+
+      const url =
+        "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/" +
+        year +
+        "/players?view=kona_player_info";
+
+      const filter = {
+        filterIds: {
+          value: ids
+        }
+      };
+
+      const response = await fetch(url, {
+        headers: {
+          "X-Fantasy-Filter": JSON.stringify(filter)
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Player rankings unavailable");
+      }
+
+      const data = await response.json();
+      const rows = Array.isArray(data)
+        ? data
+        : (data.players || []);
+
+      const byId = {};
+
+      rows.forEach(function(row) {
+        const pool = row.playerPoolEntry || row;
+        const player = pool.player || row.player || {};
+        const id = Number(player.id || pool.id || row.id || 0);
+
+        if (!id) return;
+
+        byId[id] = {
+          name: player.fullName || "",
+          positionId: Number(player.defaultPositionId || 0),
+          positionalRanking: extractPositionalRanking(row)
+        };
+      });
+
+      return byId;
+    })();
+  }
+
+  return championPlayerRankCache[year];
+}
+
+async function renderChampionKeyPlayers(champion, container) {
+  if (!container || container.dataset.loaded === "true") return;
+
+  container.dataset.loaded = "true";
+  container.innerHTML =
+    '<div class="champ-player-status">LOADING ESPN POSITIONAL RANKINGS...</div>';
+
+  try {
+    const rankings = await fetchChampionPlayerRanks(champion);
+
+    const skillPlayers = (champion.roster || [])
+      .filter(function(player) {
+        return [1, 2, 3, 4].includes(Number(player.positionId));
+      })
+      .map(function(player) {
+        const info = rankings[player.id] || {};
+
+        return {
+          id: player.id,
+          name: player.name,
+          positionId: Number(player.positionId || info.positionId || 0),
+          positionalRanking:
+            Number.isFinite(Number(info.positionalRanking))
+              ? Number(info.positionalRanking)
+              : null,
+          lineupSlotId: player.lineupSlotId
+        };
+      })
+      .sort(function(a, b) {
+        const aRank = a.positionalRanking || 9999;
+        const bRank = b.positionalRanking || 9999;
+
+        if (aRank !== bRank) return aRank - bRank;
+
+        const aBench = a.lineupSlotId === 20 || a.lineupSlotId === 21;
+        const bBench = b.lineupSlotId === 20 || b.lineupSlotId === 21;
+
+        if (aBench !== bBench) return aBench ? 1 : -1;
+        return a.name.localeCompare(b.name);
+      })
+      .slice(0, 5);
+
+    if (!skillPlayers.length) {
+      throw new Error("No ranked players found");
+    }
+
+    container.innerHTML = "";
+
+    skillPlayers.forEach(function(player) {
+      const row = document.createElement("div");
+      row.className = "champ-player";
+
+      const rankLabel = player.positionalRanking
+        ? positionName(player.positionId) + player.positionalRanking
+        : positionName(player.positionId);
+
+      row.innerHTML =
+        '<div class="champ-player-pos">' + rankLabel + '</div>' +
+        '<div class="champ-player-name">' + player.name + '</div>';
+
+      container.appendChild(row);
+    });
+  } catch (error) {
+    const fallback = (champion.roster || [])
+      .filter(function(player) {
+        return [1, 2, 3, 4].includes(Number(player.positionId));
+      })
+      .slice(0, 5);
+
+    container.innerHTML = "";
+
+    fallback.forEach(function(player) {
+      const row = document.createElement("div");
+      row.className = "champ-player";
+      row.innerHTML =
+        '<div class="champ-player-pos">' +
+          positionName(player.positionId) +
+        '</div>' +
+        '<div class="champ-player-name">' +
+          player.name +
+        '</div>';
+      container.appendChild(row);
+    });
+
+    const note = document.createElement("div");
+    note.className = "champ-player-status";
+    note.textContent = "ESPN POSITIONAL RANKINGS UNAVAILABLE FOR THIS SEASON.";
+    container.appendChild(note);
+  }
+}
+
 async function buildSite() {
   const managers = {};
   const playoffManagers = {};
@@ -1421,6 +1594,7 @@ async function buildSite() {
               const player = pool.player || {};
 
               return {
+                id: Number(player.id || entry.playerId || pool.id || 0),
                 name: player.fullName || "Unknown",
                 positionId: Number(player.defaultPositionId || 0),
                 lineupSlotId: Number(entry.lineupSlotId)
@@ -1761,95 +1935,66 @@ async function buildSite() {
         )
       ).sort(function(a, b) { return a - b; });
 
-      const lastPeriod = periods.length ? periods[periods.length - 1] : null;
-      const championshipGame = (champion.playoffGames || []).find(function(game) {
-        return game.period === lastPeriod;
-      });
+      const playoffRounds = periods
+        .map(function(period, periodIndex) {
+          const championGame = (champion.playoffGames || []).find(function(game) {
+            return game.period === period && (
+              game.homeManager === champion.manager ||
+              game.awayManager === champion.manager
+            );
+          });
 
-      let titleResultHtml = "";
-
-      if (championshipGame) {
-        const homeWon = championshipGame.homeScore > championshipGame.awayScore;
-        const winnerManager = homeWon
-          ? championshipGame.homeManager
-          : championshipGame.awayManager;
-        const loserManager = homeWon
-          ? championshipGame.awayManager
-          : championshipGame.homeManager;
-        const winnerScore = homeWon
-          ? championshipGame.homeScore
-          : championshipGame.awayScore;
-        const loserScore = homeWon
-          ? championshipGame.awayScore
-          : championshipGame.homeScore;
-
-        titleResultHtml =
-          '<div class="champ-title-result">' +
-            '<div class="champ-section-label">CHAMPIONSHIP RESULT</div>' +
-            '<div class="champ-title-score">' +
-              '<span class="winner">' + winnerManager + '</span> ' +
-              winnerScore.toFixed(1) +
-              ' &nbsp;—&nbsp; ' +
-              loserManager + ' ' + loserScore.toFixed(1) +
-            '</div>' +
-          '</div>';
-      }
+          return {
+            period: period,
+            name: roundName(periodIndex, periods.length),
+            game: championGame || null
+          };
+        })
+        .reverse();
 
       let playoffHtml =
         '<div class="champ-playoffs">' +
-          '<div class="champ-section-label">CHAMPIONSHIP BRACKET</div>';
+          '<div class="champ-section-label">PLAYOFF RESULTS</div>';
 
-      periods.forEach(function(period, periodIndex) {
-        const games = (champion.playoffGames || []).filter(function(game) {
-          return game.period === period;
-        });
-
+      playoffRounds.forEach(function(round) {
         playoffHtml +=
           '<div class="champ-round">' +
             '<div class="champ-round-name">' +
-              roundName(periodIndex, periods.length) +
+              round.name +
             '</div>';
 
-        games.forEach(function(game) {
-          const onChampionPath =
-            game.homeManager === champion.manager ||
-            game.awayManager === champion.manager;
-
+        if (!round.game) {
           playoffHtml +=
-            '<div class="champ-game' +
-              (onChampionPath ? ' champion-path' : '') +
-            '">' +
-              '<div>' + game.homeManager + '</div>' +
-              '<div class="score">' + game.homeScore.toFixed(1) + '</div>' +
-              '<div class="versus">vs</div>' +
-              '<div>' + game.awayManager + '</div>' +
-              '<div class="score">' + game.awayScore.toFixed(1) + '</div>' +
+            '<div class="champ-game champion-path">' +
+              '<div>BYE</div>' +
+              '<div></div>' +
+              '<div></div>' +
+              '<div></div>' +
+              '<div></div>' +
             '</div>';
-        });
+        } else {
+          playoffHtml +=
+            '<div class="champ-game champion-path">' +
+              '<div>' + round.game.homeManager + '</div>' +
+              '<div class="score">' + round.game.homeScore.toFixed(1) + '</div>' +
+              '<div class="versus">vs</div>' +
+              '<div>' + round.game.awayManager + '</div>' +
+              '<div class="score">' + round.game.awayScore.toFixed(1) + '</div>' +
+            '</div>';
+        }
 
         playoffHtml += '</div>';
       });
 
       playoffHtml += '</div>';
 
-      let rosterHtml =
+      const rosterHtml =
         '<div class="champ-roster">' +
-          '<div class="champ-section-label">FINAL ROSTER SNAPSHOT</div>' +
-          '<div class="champ-roster-list">';
-
-      (champion.roster || []).forEach(function(player) {
-        rosterHtml +=
-          '<div class="champ-player">' +
-            '<div class="champ-player-pos">' +
-              positionName(player.positionId) +
-            '</div>' +
-            '<div class="champ-player-name">' +
-              player.name +
-            '</div>' +
-          '</div>';
-      });
-
-      rosterHtml += '</div></div>';
+          '<div class="champ-section-label">KEY PLAYERS // FINAL POSITIONAL RANK</div>' +
+          '<div class="champ-roster-list" id="champ-stars-' +
+            champion.year +
+          '"></div>' +
+        '</div>';
 
       const earlyPlayoffNote = champion.year <= 2011
         ? '<div class="champ-note">2010-11 PLAYOFF MATCHUPS WERE TWO-WEEK SERIES; SCORES SHOWN ARE ESPN AGGREGATES.</div>'
@@ -1872,7 +2017,6 @@ async function buildSite() {
               (champion.seed || "—") +
             '</span></div>' +
         '</div>' +
-        titleResultHtml +
         playoffHtml +
         rosterHtml +
         earlyPlayoffNote;
@@ -1884,11 +2028,25 @@ async function buildSite() {
 
         const toggle = summary.querySelector(".champ-toggle");
         toggle.textContent = isExpanded ? "[+]" : "[-]";
+
+        if (isExpanded === false) {
+          renderChampionKeyPlayers(
+            champion,
+            detail.querySelector("#champ-stars-" + champion.year)
+          );
+        }
       });
 
       item.appendChild(summary);
       item.appendChild(detail);
       championsBox.appendChild(item);
+
+      if (expanded) {
+        renderChampionKeyPlayers(
+          champion,
+          detail.querySelector("#champ-stars-" + champion.year)
+        );
+      }
     });
 
     if (allGames.length) {
