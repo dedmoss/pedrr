@@ -46,23 +46,8 @@
     flex-direction: column;
   }
 
-  .brand {
-    color: #fff;
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: 1px;
-  }
-
-  .subbrand {
-    margin-top: 4px;
-    color: var(--muted);
-    font-size: 11px;
-    line-height: 1.4;
-    text-transform: uppercase;
-  }
-
   .menu {
-    margin-top: 38px;
+    margin-top: 0;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -119,11 +104,6 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
-  }
-
-  .topline .right {
-    color: var(--dim);
-    font-weight: 400;
   }
 
   .view {
@@ -271,6 +251,66 @@
     padding-top: 8px;
   }
 
+  .h2h-controls {
+    max-width: 900px;
+    display: grid;
+    grid-template-columns: 1fr 36px 1fr;
+    gap: 14px;
+    align-items: end;
+    margin-top: 12px;
+  }
+
+  .h2h-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--green);
+    font-size: 11px;
+  }
+
+  .h2h-field select {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 0;
+    background: var(--bg);
+    color: #fff;
+    padding: 8px 10px;
+    font: inherit;
+  }
+
+  .h2h-vs {
+    padding-bottom: 12px;
+    color: var(--dim);
+    text-align: center;
+    font-size: 12px;
+  }
+
+  .h2h-result {
+    max-width: 900px;
+    margin-top: 28px;
+    border-top: 1px solid var(--line);
+  }
+
+  .h2h-result-row {
+    display: grid;
+    grid-template-columns: 220px 220px 1fr;
+    gap: 18px;
+    align-items: center;
+    min-height: 54px;
+    border-bottom: 1px solid #25282b;
+  }
+
+  .h2h-record {
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .h2h-detail {
+    color: #8c9196;
+    font-size: 13px;
+  }
+
   @media (max-width: 850px) {
     html, body { overflow: auto; }
     .app {
@@ -291,6 +331,9 @@
     .view { overflow: auto; }
     .champ-grid { grid-template-columns: 1fr; }
     .stat-row { grid-template-columns: 1fr; gap: 4px; padding: 10px 0; }
+    .h2h-controls { grid-template-columns: 1fr; }
+    .h2h-vs { padding: 0; }
+    .h2h-result-row { grid-template-columns: 1fr; gap: 5px; padding: 12px 0; }
     table { min-width: 720px; }
     #leaderboard-view, #playoffs-view, #alltime-view { overflow-x: auto; }
   }
@@ -300,15 +343,13 @@
 
 <div class="app">
   <aside class="sidebar">
-    <div class="brand">PEDRR.COM</div>
-    <div class="subbrand">Busch League database<br>Est. 2010</div>
-
     <nav class="menu" aria-label="League records">
       <button class="nav-btn active" data-view="leaderboard-view" data-title="Regular Season">[ REGULAR SEASON ]</button>
       <button class="nav-btn" data-view="playoffs-view" data-title="Playoffs">[ PLAYOFFS ]</button>
       <button class="nav-btn" data-view="alltime-view" data-title="All-Time">[ ALL-TIME ]</button>
       <button class="nav-btn" data-view="championships-view" data-title="Championship History">[ CHAMPIONSHIP HISTORY ]</button>
       <button class="nav-btn" data-view="records-view" data-title="Record Book">[ RECORD BOOK ]</button>
+      <button class="nav-btn" data-view="h2h-view" data-title="Head-to-Head">[ HEAD-TO-HEAD ]</button>
     </nav>
 
     <div class="sidebar-meta">
@@ -321,7 +362,6 @@
   <main class="main">
     <div class="topline">
       <span id="view-title">REGULAR SEASON</span>
-      <span class="right">PEDRR© // ARCHIVE ONLINE</span>
     </div>
 
     <section id="leaderboard-view" class="view active">
@@ -449,6 +489,41 @@
         </div>
       </div>
     </section>
+
+    <section id="h2h-view" class="view">
+      <div class="hint" id="h2h-status">ALL ESPN-SCORED MATCHUPS // 2010-2026</div>
+
+      <div class="h2h-controls">
+        <div class="h2h-field">
+          <label for="h2h-manager-a">MANAGER A</label>
+          <select id="h2h-manager-a"></select>
+        </div>
+
+        <div class="h2h-vs">VS</div>
+
+        <div class="h2h-field">
+          <label for="h2h-manager-b">MANAGER B</label>
+          <select id="h2h-manager-b"></select>
+        </div>
+      </div>
+
+      <div class="h2h-result" aria-live="polite">
+        <div class="h2h-result-row">
+          <div class="label" id="h2h-name-a">—</div>
+          <div class="h2h-record" id="h2h-record">—</div>
+          <div class="h2h-detail" id="h2h-detail">SELECT TWO MANAGERS</div>
+        </div>
+        <div class="h2h-result-row">
+          <div class="label" id="h2h-name-b">—</div>
+          <div class="h2h-record" id="h2h-reverse-record">—</div>
+          <div class="h2h-detail" id="h2h-points">—</div>
+        </div>
+      </div>
+
+      <div class="footnote">
+        PLAYOFF SERIES FROM THE EARLY YEARS COUNT AS ONE MATCHUP, USING ESPN'S AGGREGATE SERIES SCORE.
+      </div>
+    </section>
   </main>
 </div>
 
@@ -457,6 +532,30 @@ const ARCHIVE_FILES = [
   "busch-league-history-2010-2018.json",
   "busch-league-history-2019-2025.json"
 ];
+
+const LIVE_SEASON = 2026;
+const LIVE_LEAGUE_ID = "530294";
+const LIVE_URL =
+  "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/" +
+  LIVE_SEASON +
+  "/segments/0/leagues/" +
+  LIVE_LEAGUE_ID +
+  "?view=mTeam&view=mMatchup&view=mMatchupScore&view=mSettings";
+
+const LIVE_MANAGER_MAP = {
+  "dedmoss": "CMSH",
+  "dandrewvos": "Vos",
+  "Fantasy Football Team, Pete": "Peter",
+  "dcm341": "David",
+  "adachit@gmail.com": "Tats",
+  "SeamusJ": "Timmy",
+  "cameronjwilliams14": "Cam",
+  "mumets14": "Matt",
+  "Trevor8434": "Trevor",
+  "mriotta": "Michele",
+  "WRLJ9688": "Randy",
+  "TheDamnScott": "Geoff"
+};
 
 const NAME_MAP = {
   "Geoffrey Gund": "Geoff",
@@ -533,6 +632,9 @@ let playoffSortDirection = "desc";
 let allTimeManagerList = [];
 let allTimeSortKey = "wins";
 let allTimeSortDirection = "desc";
+
+let headToHeadGames = [];
+let headToHeadLiveLoaded = false;
 
 function renderLeaderboard() {
   const leaderboard = document.getElementById("leaderboard");
@@ -735,6 +837,228 @@ document.querySelectorAll("th[data-alltime-sort]").forEach(function(header) {
     renderAllTimeLeaderboard();
   });
 });
+
+function liveManagerName(member) {
+  if (!member) return "Unknown";
+
+  const fullName =
+    ((member.firstName || "") + " " + (member.lastName || "")).trim();
+
+  if (fullName && NAME_MAP[fullName]) {
+    return NAME_MAP[fullName];
+  }
+
+  const display = member.displayName || "";
+
+  if (LIVE_MANAGER_MAP[display]) {
+    return LIVE_MANAGER_MAP[display];
+  }
+
+  if (display && NAME_MAP[display]) {
+    return NAME_MAP[display];
+  }
+
+  return fullName || display || "Unknown";
+}
+
+async function addLiveHeadToHeadGames(games) {
+  try {
+    const response = await fetch(LIVE_URL);
+
+    if (!response.ok) {
+      throw new Error("2026 ESPN request failed: HTTP " + response.status);
+    }
+
+    const data = await response.json();
+    const members = {};
+
+    (data.members || []).forEach(function(member) {
+      members[member.id] = liveManagerName(member);
+    });
+
+    const teamsById = {};
+
+    (data.teams || []).forEach(function(team) {
+      const ownerId = team.primaryOwner || (team.owners && team.owners[0]);
+      teamsById[team.id] =
+        members[ownerId] ||
+        LIVE_MANAGER_MAP[ownerId] ||
+        "Unknown";
+    });
+
+    (data.schedule || []).forEach(function(matchup) {
+      const home = matchup.home;
+      const away = matchup.away;
+
+      if (!home || !away) return;
+
+      const homeScore = Number(home.totalPoints);
+      const awayScore = Number(away.totalPoints);
+
+      if (
+        !Number.isFinite(homeScore) ||
+        !Number.isFinite(awayScore) ||
+        (homeScore === 0 && awayScore === 0)
+      ) {
+        return;
+      }
+
+      const homeManager = teamsById[home.teamId];
+      const awayManager = teamsById[away.teamId];
+
+      if (
+        !homeManager ||
+        !awayManager ||
+        homeManager === "Unknown" ||
+        awayManager === "Unknown"
+      ) {
+        return;
+      }
+
+      games.push({
+        year: LIVE_SEASON,
+        matchupPeriod: matchup.matchupPeriodId,
+        homeManager: homeManager,
+        homeScore: homeScore,
+        awayManager: awayManager,
+        awayScore: awayScore
+      });
+    });
+
+    return true;
+  } catch (error) {
+    console.warn(error);
+    return false;
+  }
+}
+
+function populateHeadToHead() {
+  const selectA = document.getElementById("h2h-manager-a");
+  const selectB = document.getElementById("h2h-manager-b");
+
+  const nameSet = new Set();
+
+  headToHeadGames.forEach(function(game) {
+    if (game.homeManager && game.homeManager !== "Unknown") {
+      nameSet.add(game.homeManager);
+    }
+    if (game.awayManager && game.awayManager !== "Unknown") {
+      nameSet.add(game.awayManager);
+    }
+  });
+
+  const currentNames = CURRENT_NAUGHTYBOYZ.filter(function(name) {
+    return nameSet.has(name);
+  });
+
+  const alumniNames = Array.from(nameSet)
+    .filter(function(name) {
+      return !CURRENT_NAUGHTYBOYZ.includes(name);
+    })
+    .sort(function(a, b) {
+      return a.localeCompare(b);
+    });
+
+  const names = currentNames.concat(alumniNames);
+
+  function fillSelect(select) {
+    select.innerHTML = "";
+
+    names.forEach(function(name) {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      select.appendChild(option);
+    });
+  }
+
+  fillSelect(selectA);
+  fillSelect(selectB);
+
+  if (names.length > 1) {
+    selectA.value = names[0];
+    selectB.value = names[1];
+  }
+
+  selectA.addEventListener("change", renderHeadToHead);
+  selectB.addEventListener("change", renderHeadToHead);
+
+  renderHeadToHead();
+}
+
+function renderHeadToHead() {
+  const managerA = document.getElementById("h2h-manager-a").value;
+  const managerB = document.getElementById("h2h-manager-b").value;
+
+  const nameA = document.getElementById("h2h-name-a");
+  const nameB = document.getElementById("h2h-name-b");
+  const record = document.getElementById("h2h-record");
+  const reverseRecord = document.getElementById("h2h-reverse-record");
+  const detail = document.getElementById("h2h-detail");
+  const points = document.getElementById("h2h-points");
+
+  nameA.textContent = managerA || "—";
+  nameB.textContent = managerB || "—";
+
+  if (!managerA || !managerB || managerA === managerB) {
+    record.textContent = "—";
+    reverseRecord.textContent = "—";
+    detail.textContent =
+      managerA === managerB ? "CHOOSE TWO DIFFERENT MANAGERS" : "SELECT TWO MANAGERS";
+    points.textContent = "—";
+    return;
+  }
+
+  const meetings = headToHeadGames.filter(function(game) {
+    return (
+      (game.homeManager === managerA && game.awayManager === managerB) ||
+      (game.homeManager === managerB && game.awayManager === managerA)
+    );
+  });
+
+  let winsA = 0;
+  let winsB = 0;
+  let ties = 0;
+  let pointsA = 0;
+  let pointsB = 0;
+
+  meetings.forEach(function(game) {
+    const aIsHome = game.homeManager === managerA;
+    const scoreA = aIsHome ? game.homeScore : game.awayScore;
+    const scoreB = aIsHome ? game.awayScore : game.homeScore;
+
+    pointsA += scoreA;
+    pointsB += scoreB;
+
+    if (scoreA > scoreB) {
+      winsA++;
+    } else if (scoreB > scoreA) {
+      winsB++;
+    } else {
+      ties++;
+    }
+  });
+
+  const years = meetings.map(function(game) { return Number(game.year); });
+  const firstYear = years.length ? Math.min.apply(null, years) : null;
+  const lastYear = years.length ? Math.max.apply(null, years) : null;
+
+  record.textContent = winsA + "-" + winsB + "-" + ties;
+  reverseRecord.textContent = winsB + "-" + winsA + "-" + ties;
+
+  detail.textContent = meetings.length
+    ? meetings.length + " MEETINGS // " + firstYear + "-" + lastYear
+    : "NO RECORDED MATCHUPS";
+
+  points.textContent = meetings.length
+    ? "PF " + pointsB.toFixed(1) + " // PA " + pointsA.toFixed(1)
+    : "—";
+
+  document.getElementById("h2h-name-a").textContent =
+    managerA + " // PF " + pointsA.toFixed(1);
+  document.getElementById("h2h-name-b").textContent =
+    managerB + " // PF " + pointsB.toFixed(1);
+}
 
 async function getArchive() {
   const responses = await Promise.all(
@@ -974,6 +1298,18 @@ async function buildSite() {
         });
       });
     });
+
+    headToHeadGames = allGames.slice();
+
+    headToHeadLiveLoaded =
+      await addLiveHeadToHeadGames(headToHeadGames);
+
+    const h2hStatus = document.getElementById("h2h-status");
+    h2hStatus.textContent = headToHeadLiveLoaded
+      ? "ALL ESPN-SCORED MATCHUPS // 2010-2026 // 2026 LIVE"
+      : "ALL ESPN-SCORED MATCHUPS // 2010-2025 // 2026 LIVE DATA UNAVAILABLE";
+
+    populateHeadToHead();
 
     managerList = Object.values(managers);
 
