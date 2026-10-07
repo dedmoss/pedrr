@@ -305,6 +305,7 @@
 
     <nav class="menu" aria-label="League records">
       <button class="nav-btn active" data-view="leaderboard-view" data-title="All-Time Regular Season">[ ALL-TIME REGULAR SEASON ]</button>
+      <button class="nav-btn" data-view="playoffs-view" data-title="Playoff Records">[ PLAYOFF RECORDS ]</button>
       <button class="nav-btn" data-view="championships-view" data-title="Championship History">[ CHAMPIONSHIP HISTORY ]</button>
       <button class="nav-btn" data-view="superlatives-view" data-title="League Superlatives">[ LEAGUE SUPERLATIVES ]</button>
       <button class="nav-btn" data-view="records-view" data-title="Record Book">[ RECORD BOOK ]</button>
@@ -343,6 +344,30 @@
         <tbody id="leaderboard"></tbody>
       </table>
       <div id="leaderboard-note" class="footnote" hidden>* FOUNDING NAUGHTYBOY // DIMMED NAMES = FORMER MEMBERS</div>
+    </section>
+
+    <section id="playoffs-view" class="view">
+      <div class="hint">CHAMPIONSHIP BRACKET ONLY // CLICK A COLUMN HEADING TO SORT.</div>
+      <table id="playoff-table" hidden>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th data-playoff-sort="name">MANAGER</th>
+            <th data-playoff-sort="wins">W</th>
+            <th data-playoff-sort="losses">L</th>
+            <th data-playoff-sort="ties">T</th>
+            <th data-playoff-sort="winPct">WIN%</th>
+            <th data-playoff-sort="pointsFor">PF</th>
+            <th data-playoff-sort="pointsAgainst">PA</th>
+            <th data-playoff-sort="championships">TITLES</th>
+          </tr>
+        </thead>
+        <tbody id="playoff-leaderboard"></tbody>
+      </table>
+      <div id="playoff-note" class="footnote" hidden>
+        * FOUNDING NAUGHTYBOY // DIMMED NAMES = FORMER MEMBERS // CONSOLATION + 3RD-PLACE GAMES EXCLUDED.<br>
+        2010-11 PLAYOFF SERIES LASTED TWO NFL WEEKS: EACH SERIES COUNTS AS ONE W/L; PF/PA USE ESPN'S AGGREGATE SERIES SCORE.
+      </div>
     </section>
 
     <section id="championships-view" class="view">
@@ -480,6 +505,10 @@ let managerList = [];
 let sortKey = "wins";
 let sortDirection = "desc";
 
+let playoffManagerList = [];
+let playoffSortKey = "wins";
+let playoffSortDirection = "desc";
+
 function renderLeaderboard() {
   const leaderboard = document.getElementById("leaderboard");
 
@@ -546,6 +575,74 @@ document.querySelectorAll("th[data-sort]").forEach(function(header) {
   });
 });
 
+function renderPlayoffLeaderboard() {
+  const leaderboard = document.getElementById("playoff-leaderboard");
+
+  playoffManagerList.sort(function(a, b) {
+    let comparison;
+
+    if (playoffSortKey === "name") {
+      comparison = a.name.localeCompare(b.name);
+    } else {
+      comparison = Number(a[playoffSortKey] || 0) - Number(b[playoffSortKey] || 0);
+    }
+
+    return playoffSortDirection === "asc" ? comparison : -comparison;
+  });
+
+  leaderboard.innerHTML = "";
+
+  playoffManagerList.forEach(function(manager, index) {
+    const row = document.createElement("tr");
+
+    if (!CURRENT_NAUGHTYBOYZ.includes(manager.name)) {
+      row.className = "alumni";
+    }
+
+    const shownName = FOUNDING_NAUGHTYBOYZ.includes(manager.name)
+      ? manager.name + "*"
+      : manager.name;
+
+    row.innerHTML =
+      '<td>' + (index + 1) + '</td>' +
+      '<td class="manager">' + shownName + '</td>' +
+      '<td>' + manager.wins + '</td>' +
+      '<td>' + manager.losses + '</td>' +
+      '<td>' + manager.ties + '</td>' +
+      '<td>' + manager.winPct.toFixed(1) + '%</td>' +
+      '<td>' + manager.pointsFor.toFixed(1) + '</td>' +
+      '<td>' + manager.pointsAgainst.toFixed(1) + '</td>' +
+      '<td>' + manager.championships + '</td>';
+
+    leaderboard.appendChild(row);
+  });
+
+  document.querySelectorAll("th[data-playoff-sort]").forEach(function(header) {
+    const base = header.dataset.playoffLabel ||
+      header.textContent.replace(/[▲▼]/g, "").trim();
+
+    header.dataset.playoffLabel = base;
+    header.textContent = header.dataset.playoffSort === playoffSortKey
+      ? base + " " + (playoffSortDirection === "asc" ? "▲" : "▼")
+      : base;
+  });
+}
+
+document.querySelectorAll("th[data-playoff-sort]").forEach(function(header) {
+  header.addEventListener("click", function() {
+    const key = header.dataset.playoffSort;
+
+    if (playoffSortKey === key) {
+      playoffSortDirection = playoffSortDirection === "desc" ? "asc" : "desc";
+    } else {
+      playoffSortKey = key;
+      playoffSortDirection = key === "name" ? "asc" : "desc";
+    }
+
+    renderPlayoffLeaderboard();
+  });
+});
+
 async function getArchive() {
   const responses = await Promise.all(
     ARCHIVE_FILES.map(function(file) { return fetch(file); })
@@ -566,8 +663,26 @@ async function getArchive() {
 
 async function buildSite() {
   const managers = {};
+  const playoffManagers = {};
   const champions = [];
   const allGames = [];
+
+  function getPlayoffManager(name) {
+    if (!playoffManagers[name]) {
+      playoffManagers[name] = {
+        name: name,
+        wins: 0,
+        losses: 0,
+        ties: 0,
+        pointsFor: 0,
+        pointsAgainst: 0,
+        championships: 0,
+        winPct: 0
+      };
+    }
+
+    return playoffManagers[name];
+  }
 
   try {
     const archive = await getArchive();
@@ -630,6 +745,105 @@ async function buildSite() {
         };
       });
 
+      /*
+        Build championship-bracket playoff records.
+
+        Important: ESPN stores each playoff matchupPeriod as one matchup.
+        In 2010 and 2011 those matchupPeriods each spanned TWO NFL scoring
+        weeks, so the totalPoints values are already the two-week aggregate.
+        We count each series once as a W/L rather than counting its component
+        NFL weeks separately.
+
+        We also track which teams are still alive in the title bracket.
+        That excludes consolation and third-place games automatically.
+      */
+      const scheduleSettings =
+        (data.settings && data.settings.scheduleSettings) || {};
+
+      const regularSeasonLength =
+        Number(scheduleSettings.matchupPeriodCount || 0);
+
+      const playoffTeamCount =
+        Number(scheduleSettings.playoffTeamCount || 0);
+
+      const alive = new Set(
+        (data.teams || [])
+          .filter(function(team) {
+            const seed = Number(team.playoffSeed || 0);
+            return seed > 0 && seed <= playoffTeamCount;
+          })
+          .map(function(team) { return team.id; })
+      );
+
+      const playoffPeriods = Array.from(
+        new Set(
+          (data.schedule || [])
+            .map(function(matchup) {
+              return Number(matchup.matchupPeriodId || 0);
+            })
+            .filter(function(period) {
+              return period > regularSeasonLength;
+            })
+        )
+      ).sort(function(a, b) { return a - b; });
+
+      playoffPeriods.forEach(function(period) {
+        const eliminatedThisRound = [];
+
+        (data.schedule || []).forEach(function(matchup) {
+          if (Number(matchup.matchupPeriodId || 0) !== period) return;
+
+          const home = matchup.home;
+          const away = matchup.away;
+
+          if (!home || !away) return;
+          if (!alive.has(home.teamId) || !alive.has(away.teamId)) return;
+
+          const homeTeam = teamsById[home.teamId];
+          const awayTeam = teamsById[away.teamId];
+
+          if (!homeTeam || !awayTeam) return;
+
+          const homeScore = Number(home.totalPoints);
+          const awayScore = Number(away.totalPoints);
+
+          if (!Number.isFinite(homeScore) || !Number.isFinite(awayScore)) return;
+
+          const homeStats = getPlayoffManager(homeTeam.manager);
+          const awayStats = getPlayoffManager(awayTeam.manager);
+
+          homeStats.pointsFor += homeScore;
+          homeStats.pointsAgainst += awayScore;
+          awayStats.pointsFor += awayScore;
+          awayStats.pointsAgainst += homeScore;
+
+          if (matchup.winner === "HOME") {
+            homeStats.wins++;
+            awayStats.losses++;
+            eliminatedThisRound.push(away.teamId);
+          } else if (matchup.winner === "AWAY") {
+            awayStats.wins++;
+            homeStats.losses++;
+            eliminatedThisRound.push(home.teamId);
+          } else if (homeScore > awayScore) {
+            homeStats.wins++;
+            awayStats.losses++;
+            eliminatedThisRound.push(away.teamId);
+          } else if (awayScore > homeScore) {
+            awayStats.wins++;
+            homeStats.losses++;
+            eliminatedThisRound.push(home.teamId);
+          } else {
+            homeStats.ties++;
+            awayStats.ties++;
+          }
+        });
+
+        eliminatedThisRound.forEach(function(teamId) {
+          alive.delete(teamId);
+        });
+      });
+
       (data.schedule || []).forEach(function(matchup) {
         const home = matchup.home;
         const away = matchup.away;
@@ -681,6 +895,21 @@ async function buildSite() {
     document.getElementById("loading").hidden = true;
     document.getElementById("leaderboard-table").hidden = false;
     document.getElementById("leaderboard-note").hidden = false;
+
+    playoffManagerList = Object.values(playoffManagers);
+
+    playoffManagerList.forEach(function(manager) {
+      const games = manager.wins + manager.losses + manager.ties;
+      manager.winPct = games
+        ? ((manager.wins + manager.ties * 0.5) / games) * 100
+        : 0;
+      manager.championships =
+        managers[manager.name] ? managers[manager.name].championships : 0;
+    });
+
+    renderPlayoffLeaderboard();
+    document.getElementById("playoff-table").hidden = false;
+    document.getElementById("playoff-note").hidden = false;
 
     champions.sort(function(a, b) { return b.year - a.year; });
 
