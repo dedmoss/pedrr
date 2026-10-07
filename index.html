@@ -1340,6 +1340,19 @@ async function getArchive() {
   return Object.assign({}, ...archives);
 }
 
+function championPositionName(positionId) {
+  const positions = {
+    1: "QB",
+    2: "RB",
+    3: "WR",
+    4: "TE",
+    5: "K",
+    16: "D/ST"
+  };
+
+  return positions[positionId] || "FLEX";
+}
+
 const championPlayerRankCache = {};
 
 function extractPositionalRanking(row) {
@@ -1483,8 +1496,8 @@ async function renderChampionKeyPlayers(champion, container) {
       row.className = "champ-player";
 
       const rankLabel = player.positionalRanking
-        ? positionName(player.positionId) + player.positionalRanking
-        : positionName(player.positionId);
+        ? championPositionName(player.positionId) + player.positionalRanking
+        : championPositionName(player.positionId);
 
       row.innerHTML =
         '<div class="champ-player-pos">' + rankLabel + '</div>' +
@@ -1506,7 +1519,7 @@ async function renderChampionKeyPlayers(champion, container) {
       row.className = "champ-player";
       row.innerHTML =
         '<div class="champ-player-pos">' +
-          positionName(player.positionId) +
+          championPositionName(player.positionId) +
         '</div>' +
         '<div class="champ-player-name">' +
           player.name +
