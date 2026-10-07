@@ -23,20 +23,20 @@
     --green: #8cff9a;
   }
 
-  html.light {
-    --bg: #f4f1e8;
-    --panel: #ece8dd;
-    --text: #252525;
-    --muted: #66635e;
-    --dim: #88847b;
-    --line: #9d988e;
-    --row-line: #d7d2c6;
-    --hover: #e9e4d8;
-    --strong: #111;
-    --alumni: #9b978e;
-    --secondary: #68645c;
-    --accent: #b50068;
-    --green: #176b2b;
+  html.pink {
+    --bg: #fff0f7;
+    --panel: #f8dce9;
+    --text: #3d2030;
+    --muted: #7f5d6d;
+    --dim: #9b7788;
+    --line: #cda9ba;
+    --row-line: #ead0dc;
+    --hover: #f7dbe8;
+    --strong: #241019;
+    --alumni: #a98c99;
+    --secondary: #765464;
+    --accent: #b00063;
+    --green: #356b42;
   }
 
   html, body {
@@ -490,7 +490,7 @@
   <main class="main">
     <div class="topline">
       <span id="view-title">REGULAR SEASON</span>
-      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light theme">[ LIGHT ]</button>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to pink theme">[ PINK ]</button>
     </div>
 
     <section id="leaderboard-view" class="view active">
@@ -690,12 +690,12 @@ function createManager(name) {
 const themeToggle = document.getElementById("theme-toggle");
 
 function applyTheme(theme) {
-  const isLight = theme === "light";
-  document.documentElement.classList.toggle("light", isLight);
-  themeToggle.textContent = isLight ? "[ DARK ]" : "[ LIGHT ]";
+  const isPink = theme === "pink";
+  document.documentElement.classList.toggle("pink", isPink);
+  themeToggle.textContent = isPink ? "[ DARK ]" : "[ PINK ]";
   themeToggle.setAttribute(
     "aria-label",
-    isLight ? "Switch to dark theme" : "Switch to light theme"
+    isPink ? "Switch to dark theme" : "Switch to pink theme"
   );
 }
 
@@ -707,11 +707,13 @@ try {
   savedTheme = null;
 }
 
-applyTheme(savedTheme === "light" ? "light" : "dark");
+applyTheme(
+  savedTheme === "pink" || savedTheme === "light" ? "pink" : "dark"
+);
 
 themeToggle.addEventListener("click", function() {
   const nextTheme =
-    document.documentElement.classList.contains("light") ? "dark" : "light";
+    document.documentElement.classList.contains("pink") ? "dark" : "pink";
 
   applyTheme(nextTheme);
 
