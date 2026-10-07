@@ -14,8 +14,29 @@
     --muted: #777;
     --dim: #4f5357;
     --line: #565b60;
+    --row-line: #25282b;
+    --hover: #0f1215;
+    --strong: #fff;
+    --alumni: #61656a;
+    --secondary: #8c9196;
     --accent: #ff62b8;
     --green: #8cff9a;
+  }
+
+  html.light {
+    --bg: #f4f1e8;
+    --panel: #ece8dd;
+    --text: #252525;
+    --muted: #66635e;
+    --dim: #88847b;
+    --line: #9d988e;
+    --row-line: #d7d2c6;
+    --hover: #e9e4d8;
+    --strong: #111;
+    --alumni: #9b978e;
+    --secondary: #68645c;
+    --accent: #b50068;
+    --green: #176b2b;
   }
 
   html, body {
@@ -47,7 +68,7 @@
   }
 
   .brand {
-    color: #fff;
+    color: var(--strong);
     font-size: 15px;
     font-weight: 700;
     line-height: 1.35;
@@ -74,7 +95,7 @@
     white-space: nowrap;
   }
 
-  .nav-btn:hover { color: #fff; }
+  .nav-btn:hover { color: var(--strong); }
 
   .nav-btn.active {
     color: var(--accent);
@@ -83,7 +104,7 @@
 
   .nav-btn.active::before {
     content: "> ";
-    color: #fff;
+    color: var(--strong);
   }
 
   .sidebar-meta {
@@ -106,14 +127,32 @@
     flex: 0 0 auto;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     gap: 20px;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--line);
-    color: #fff;
+    color: var(--strong);
     font-size: 13px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
+  }
+
+  .theme-toggle {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--dim);
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  .theme-toggle:hover,
+  .theme-toggle:focus-visible {
+    color: var(--accent);
   }
 
   .view {
@@ -148,7 +187,7 @@
 
   th, td {
     padding: 8px 10px;
-    border-bottom: 1px solid #25282b;
+    border-bottom: 1px solid var(--row-line);
     text-align: right;
     white-space: nowrap;
     line-height: 1.1;
@@ -192,12 +231,12 @@
   }
 
   tbody tr:hover {
-    background: #0f1215;
+    background: var(--hover);
   }
 
   .manager {
     font-weight: 700;
-    color: #fff;
+    color: var(--strong);
     font-size: 14px;
   }
 
@@ -214,11 +253,11 @@
   }
 
   tr.alumni {
-    color: #61656a;
+    color: var(--alumni);
   }
 
   tr.alumni .manager {
-    color: #61656a;
+    color: var(--alumni);
   }
 
   .footnote {
@@ -236,7 +275,7 @@
     min-height: 34px;
     display: grid;
     align-items: center;
-    border-bottom: 1px solid #25282b;
+    border-bottom: 1px solid var(--row-line);
   }
 
   .champ-row {
@@ -251,12 +290,12 @@
   }
 
   .champ-manager {
-    color: #fff;
+    color: var(--strong);
     font-weight: 700;
   }
 
   .champ-team {
-    color: #8c9196;
+    color: var(--secondary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -274,12 +313,12 @@
   }
 
   .stat-value {
-    color: #fff;
+    color: var(--strong);
     font-weight: 700;
   }
 
   .stat-detail {
-    color: #8c9196;
+    color: var(--secondary);
   }
 
   .loading {
@@ -297,7 +336,7 @@
     grid-template-columns: 220px minmax(0, 1fr);
     gap: 22px;
     padding: 13px 0;
-    border-bottom: 1px solid #25282b;
+    border-bottom: 1px solid var(--row-line);
   }
 
   .record-title {
@@ -321,12 +360,12 @@
   }
 
   .record-entry .record-value {
-    color: #fff;
+    color: var(--strong);
     font-weight: 700;
   }
 
   .record-entry .record-detail {
-    color: #8c9196;
+    color: var(--secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -358,7 +397,7 @@
     border: 1px solid var(--line);
     border-radius: 0;
     background: var(--bg);
-    color: #fff;
+    color: var(--strong);
     padding: 8px 10px;
     font: inherit;
   }
@@ -382,17 +421,17 @@
     gap: 18px;
     align-items: center;
     min-height: 54px;
-    border-bottom: 1px solid #25282b;
+    border-bottom: 1px solid var(--row-line);
   }
 
   .h2h-record {
-    color: #fff;
+    color: var(--strong);
     font-size: 22px;
     font-weight: 700;
   }
 
   .h2h-detail {
-    color: #8c9196;
+    color: var(--secondary);
     font-size: 13px;
   }
 
@@ -451,6 +490,7 @@
   <main class="main">
     <div class="topline">
       <span id="view-title">REGULAR SEASON</span>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to light theme">[ LIGHT ]</button>
     </div>
 
     <section id="leaderboard-view" class="view active">
@@ -646,6 +686,41 @@ function createManager(name) {
     winPct: 0
   };
 }
+
+const themeToggle = document.getElementById("theme-toggle");
+
+function applyTheme(theme) {
+  const isLight = theme === "light";
+  document.documentElement.classList.toggle("light", isLight);
+  themeToggle.textContent = isLight ? "[ DARK ]" : "[ LIGHT ]";
+  themeToggle.setAttribute(
+    "aria-label",
+    isLight ? "Switch to dark theme" : "Switch to light theme"
+  );
+}
+
+let savedTheme = null;
+
+try {
+  savedTheme = localStorage.getItem("pedrr-theme");
+} catch (error) {
+  savedTheme = null;
+}
+
+applyTheme(savedTheme === "light" ? "light" : "dark");
+
+themeToggle.addEventListener("click", function() {
+  const nextTheme =
+    document.documentElement.classList.contains("light") ? "dark" : "light";
+
+  applyTheme(nextTheme);
+
+  try {
+    localStorage.setItem("pedrr-theme", nextTheme);
+  } catch (error) {
+    // Theme still works for this visit if storage is unavailable.
+  }
+});
 
 document.querySelectorAll(".nav-btn").forEach(function(button) {
   button.addEventListener("click", function() {
