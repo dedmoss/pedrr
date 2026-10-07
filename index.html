@@ -308,7 +308,6 @@
       <button class="nav-btn" data-view="playoffs-view" data-title="Playoffs">[ PLAYOFFS ]</button>
       <button class="nav-btn" data-view="alltime-view" data-title="All-Time">[ ALL-TIME ]</button>
       <button class="nav-btn" data-view="championships-view" data-title="Championship History">[ CHAMPIONSHIP HISTORY ]</button>
-      <button class="nav-btn" data-view="superlatives-view" data-title="League Superlatives">[ LEAGUE SUPERLATIVES ]</button>
       <button class="nav-btn" data-view="records-view" data-title="Record Book">[ RECORD BOOK ]</button>
     </nav>
 
@@ -398,8 +397,9 @@
       <div id="champions" class="champ-grid"></div>
     </section>
 
-    <section id="superlatives-view" class="view">
+    <section id="records-view" class="view">
       <div class="stats">
+        <div class="hint">LEAGUE SUPERLATIVES</div>
         <div class="stat-row">
           <div class="label">MOST CAREER WINS</div>
           <div class="stat-value" id="mostWins">—</div>
@@ -420,11 +420,8 @@
           <div class="stat-value" id="mostTitles">—</div>
           <div class="stat-detail" id="mostTitlesDetail"></div>
         </div>
-      </div>
-    </section>
 
-    <section id="records-view" class="view">
-      <div class="stats">
+        <div class="hint" style="margin-top: 18px;">SINGLE-GAME RECORDS</div>
         <div class="stat-row">
           <div class="label">HIGHEST SCORE</div>
           <div class="stat-value" id="highestScore">—</div>
