@@ -140,19 +140,18 @@
   }
 
   table {
-    width: 100%;
+    width: min(100%, 1050px);
     border-collapse: collapse;
-    table-layout: fixed;
-    font-size: clamp(10px, 1.05vw, 13px);
+    table-layout: auto;
+    font-size: 14px;
   }
 
   th, td {
-    padding: 5px 7px;
+    padding: 8px 10px;
     border-bottom: 1px solid #25282b;
     text-align: right;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.1;
   }
 
   th {
@@ -163,18 +162,33 @@
   }
 
   th:first-child, td:first-child {
-    width: 36px;
+    width: 42px;
     text-align: left;
     color: var(--dim);
   }
 
   th:nth-child(2), td:nth-child(2) {
-    width: 150px;
+    width: 175px;
     text-align: left;
   }
 
-  th:last-child, td:last-child {
+  th:nth-child(3), td:nth-child(3),
+  th:nth-child(4), td:nth-child(4),
+  th:nth-child(5), td:nth-child(5) {
     width: 58px;
+  }
+
+  th:nth-child(6), td:nth-child(6) {
+    width: 82px;
+  }
+
+  th:nth-child(7), td:nth-child(7),
+  th:nth-child(8), td:nth-child(8) {
+    width: 110px;
+  }
+
+  th:last-child, td:last-child {
+    width: 84px;
   }
 
   tbody tr:hover {
@@ -184,6 +198,19 @@
   .manager {
     font-weight: 700;
     color: #fff;
+    font-size: 14px;
+  }
+
+  #leaderboard-view,
+  #playoffs-view,
+  #alltime-view {
+    padding-top: 16px;
+  }
+
+  #leaderboard-view .hint,
+  #playoffs-view .hint,
+  #alltime-view .hint {
+    margin-bottom: 12px;
   }
 
   tr.alumni {
@@ -259,6 +286,54 @@
     color: var(--green);
     font-size: 13px;
     padding-top: 8px;
+  }
+
+  .record-book {
+    width: min(100%, 1050px);
+  }
+
+  .record-group {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 22px;
+    padding: 13px 0;
+    border-bottom: 1px solid #25282b;
+  }
+
+  .record-title {
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 700;
+    padding-top: 5px;
+  }
+
+  .record-entry {
+    display: grid;
+    grid-template-columns: 38px 245px minmax(0, 1fr);
+    gap: 12px;
+    min-height: 28px;
+    align-items: center;
+    font-size: 13px;
+  }
+
+  .record-entry .record-rank {
+    color: var(--accent);
+  }
+
+  .record-entry .record-value {
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .record-entry .record-detail {
+    color: #8c9196;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .record-entry.dimmed {
+    opacity: .45;
   }
 
   .h2h-controls {
@@ -341,6 +416,8 @@
     .view { overflow: auto; }
     .champ-grid { grid-template-columns: 1fr; }
     .stat-row { grid-template-columns: 1fr; gap: 4px; padding: 10px 0; }
+    .record-group { grid-template-columns: 1fr; gap: 8px; }
+    .record-entry { grid-template-columns: 34px 170px minmax(260px, 1fr); }
     .h2h-controls { grid-template-columns: 1fr; }
     .h2h-vs { padding: 0; }
     .h2h-result-row { grid-template-columns: 1fr; gap: 5px; padding: 12px 0; }
@@ -359,7 +436,7 @@
       <button class="nav-btn active" data-view="leaderboard-view" data-title="Regular Season">[ REGULAR SEASON ]</button>
       <button class="nav-btn" data-view="playoffs-view" data-title="Playoffs">[ PLAYOFFS ]</button>
       <button class="nav-btn" data-view="alltime-view" data-title="All-Time">[ ALL-TIME ]</button>
-      <button class="nav-btn" data-view="championships-view" data-title="Championship History">[ CHAMPIONSHIP HISTORY ]</button>
+      <button class="nav-btn" data-view="championships-view" data-title="Championships">[ CHAMPIONSHIPS ]</button>
       <button class="nav-btn" data-view="records-view" data-title="Record Book">[ RECORD BOOK ]</button>
       <button class="nav-btn" data-view="h2h-view" data-title="Head-to-Head">[ HEAD-TO-HEAD ]</button>
     </nav>
@@ -450,56 +527,8 @@
     </section>
 
     <section id="records-view" class="view">
-      <div class="stats">
-        <div class="hint">LEAGUE SUPERLATIVES</div>
-        <div class="stat-row">
-          <div class="label">MOST CAREER WINS</div>
-          <div class="stat-value" id="mostWins">—</div>
-          <div class="stat-detail" id="mostWinsDetail"></div>
-        </div>
-        <div class="stat-row">
-          <div class="label">MOST CAREER POINTS</div>
-          <div class="stat-value" id="mostPoints">—</div>
-          <div class="stat-detail" id="mostPointsDetail"></div>
-        </div>
-        <div class="stat-row">
-          <div class="label">BEST WIN PERCENTAGE</div>
-          <div class="stat-value" id="bestPct">—</div>
-          <div class="stat-detail" id="bestPctDetail"></div>
-        </div>
-        <div class="stat-row">
-          <div class="label">MOST CHAMPIONSHIPS</div>
-          <div class="stat-value" id="mostTitles">—</div>
-          <div class="stat-detail" id="mostTitlesDetail"></div>
-        </div>
-
-        <div class="hint" style="margin-top: 18px;">SINGLE-GAME RECORDS</div>
-        <div class="stat-row">
-          <div class="label">HIGHEST SCORE</div>
-          <div class="stat-value" id="highestScore">—</div>
-          <div class="stat-detail" id="highestScoreDetail"></div>
-        </div>
-        <div class="stat-row">
-          <div class="label">LOWEST SCORE</div>
-          <div class="stat-value" id="lowestScore">—</div>
-          <div class="stat-detail" id="lowestScoreDetail"></div>
-        </div>
-        <div class="stat-row">
-          <div class="label">BIGGEST BLOWOUT</div>
-          <div class="stat-value" id="biggestBlowout">—</div>
-          <div class="stat-detail" id="biggestBlowoutDetail"></div>
-        </div>
-        <div class="stat-row">
-          <div class="label">HIGHEST SCORE IN A LOSS</div>
-          <div class="stat-value" id="highestLoss">—</div>
-          <div class="stat-detail" id="highestLossDetail"></div>
-        </div>
-        <div class="stat-row">
-          <div class="label">LOWEST SCORE IN A WIN</div>
-          <div class="stat-value" id="lowestWin">—</div>
-          <div class="stat-detail" id="lowestWinDetail"></div>
-        </div>
-      </div>
+      <div class="hint">TOP THREE PER CATEGORY // 2010-2025 ARCHIVE</div>
+      <div id="record-book" class="record-book"></div>
     </section>
 
     <section id="h2h-view" class="view">
@@ -1430,120 +1459,151 @@ async function buildSite() {
         });
       });
 
-      const highestScore = [...performances]
-        .sort(function(a, b) { return b.score - a.score; })[0];
+      const highestScores = [...performances]
+        .sort(function(a, b) { return b.score - a.score; })
+        .slice(0, 3);
 
-      const lowestScore = [...performances]
+      const lowestScores = [...performances]
         .filter(function(game) {
           return game.score > 0 &&
             game.matchupPeriod <= game.regularSeasonLength;
         })
-        .sort(function(a, b) { return a.score - b.score; })[0];
+        .sort(function(a, b) { return a.score - b.score; })
+        .slice(0, 3);
 
-      const highestLoss = [...performances]
-        .filter(function(game) { return game.score < game.opponentScore; })
-        .sort(function(a, b) { return b.score - a.score; })[0];
-
-      const lowestWin = [...performances]
+      const highestLosses = [...performances]
         .filter(function(game) {
-          return game.score > game.opponentScore && game.opponentScore > 0;
+          return game.score < game.opponentScore;
         })
-        .sort(function(a, b) { return a.score - b.score; })[0];
+        .sort(function(a, b) { return b.score - a.score; })
+        .slice(0, 3);
 
-      const biggestBlowout = [...recordBookGames]
+      const lowestWins = [...performances]
+        .filter(function(game) {
+          return game.score > game.opponentScore &&
+            game.opponentScore > 0;
+        })
+        .sort(function(a, b) { return a.score - b.score; })
+        .slice(0, 3);
+
+      const biggestBlowouts = [...recordBookGames]
         .filter(function(game) {
           return game.matchupPeriod <= game.regularSeasonLength;
         })
+        .map(function(game) {
+          const homeWon = game.homeScore > game.awayScore;
+
+          return {
+            year: game.year,
+            matchupPeriod: game.matchupPeriod,
+            manager: homeWon ? game.homeManager : game.awayManager,
+            opponent: homeWon ? game.awayManager : game.homeManager,
+            winnerScore: homeWon ? game.homeScore : game.awayScore,
+            loserScore: homeWon ? game.awayScore : game.homeScore,
+            margin: Math.abs(game.homeScore - game.awayScore)
+          };
+        })
         .sort(function(a, b) {
-          return Math.abs(b.homeScore - b.awayScore) -
-            Math.abs(a.homeScore - a.awayScore);
-        })[0];
+          return b.margin - a.margin;
+        })
+        .slice(0, 3);
 
       function performanceDetail(game) {
         return game.year + " // WK " + game.matchupPeriod +
           " // VS " + game.opponent + " (" + game.opponentScore.toFixed(1) + ")";
       }
 
-      document.getElementById("highestScore").textContent =
-        highestScore.manager + " // " + highestScore.score.toFixed(1);
-      document.getElementById("highestScoreDetail").textContent =
-        performanceDetail(highestScore);
+      function renderRecordCategory(title, entries, valueText, detailText) {
+        const book = document.getElementById("record-book");
+        const group = document.createElement("div");
+        group.className = "record-group";
 
-      document.getElementById("lowestScore").textContent =
-        lowestScore.manager + " // " + lowestScore.score.toFixed(1);
-      document.getElementById("lowestScoreDetail").textContent =
-        performanceDetail(lowestScore);
+        const titleBox = document.createElement("div");
+        titleBox.className = "record-title";
+        titleBox.textContent = title;
 
-      document.getElementById("highestLoss").textContent =
-        highestLoss.manager + " // " + highestLoss.score.toFixed(1);
-      document.getElementById("highestLossDetail").textContent =
-        performanceDetail(highestLoss);
+        const entriesBox = document.createElement("div");
 
-      document.getElementById("lowestWin").textContent =
-        lowestWin.manager + " // " + lowestWin.score.toFixed(1);
-      document.getElementById("lowestWinDetail").textContent =
-        performanceDetail(lowestWin);
+        entries.forEach(function(entry, index) {
+          const row = document.createElement("div");
+          row.className = "record-entry" + (index > 0 ? " dimmed" : "");
 
-      const blowoutWinner = biggestBlowout.homeScore > biggestBlowout.awayScore
-        ? biggestBlowout.homeManager
-        : biggestBlowout.awayManager;
+          const rank = document.createElement("div");
+          rank.className = "record-rank";
+          rank.textContent = "#" + (index + 1);
 
-      const blowoutLoser = biggestBlowout.homeScore > biggestBlowout.awayScore
-        ? biggestBlowout.awayManager
-        : biggestBlowout.homeManager;
+          const value = document.createElement("div");
+          value.className = "record-value";
+          value.textContent = valueText(entry);
 
-      const blowoutWinnerScore = Math.max(
-        biggestBlowout.homeScore,
-        biggestBlowout.awayScore
+          const detail = document.createElement("div");
+          detail.className = "record-detail";
+          detail.textContent = detailText(entry);
+
+          row.appendChild(rank);
+          row.appendChild(value);
+          row.appendChild(detail);
+          entriesBox.appendChild(row);
+        });
+
+        group.appendChild(titleBox);
+        group.appendChild(entriesBox);
+        book.appendChild(group);
+      }
+
+      const recordBook = document.getElementById("record-book");
+      recordBook.innerHTML = "";
+
+      renderRecordCategory(
+        "HIGHEST SCORE",
+        highestScores,
+        function(game) {
+          return game.manager + " // " + game.score.toFixed(1);
+        },
+        performanceDetail
       );
 
-      const blowoutLoserScore = Math.min(
-        biggestBlowout.homeScore,
-        biggestBlowout.awayScore
+      renderRecordCategory(
+        "LOWEST SCORE",
+        lowestScores,
+        function(game) {
+          return game.manager + " // " + game.score.toFixed(1);
+        },
+        performanceDetail
       );
 
-      const blowoutMargin = Math.abs(
-        biggestBlowout.homeScore - biggestBlowout.awayScore
+      renderRecordCategory(
+        "BIGGEST BLOWOUT",
+        biggestBlowouts,
+        function(game) {
+          return game.manager + " // +" + game.margin.toFixed(1);
+        },
+        function(game) {
+          return game.year + " // WK " + game.matchupPeriod +
+            " // " + game.manager + " " + game.winnerScore.toFixed(1) +
+            " - " + game.opponent + " " + game.loserScore.toFixed(1);
+        }
       );
 
-      document.getElementById("biggestBlowout").textContent =
-        blowoutWinner + " // +" + blowoutMargin.toFixed(1);
+      renderRecordCategory(
+        "HIGHEST SCORE IN A LOSS",
+        highestLosses,
+        function(game) {
+          return game.manager + " // " + game.score.toFixed(1);
+        },
+        performanceDetail
+      );
 
-      document.getElementById("biggestBlowoutDetail").textContent =
-        biggestBlowout.year + " // WK " + biggestBlowout.matchupPeriod +
-        " // " + blowoutWinner + " " + blowoutWinnerScore.toFixed(1) +
-        " - " + blowoutLoser + " " + blowoutLoserScore.toFixed(1);
+      renderRecordCategory(
+        "LOWEST SCORE IN A WIN",
+        lowestWins,
+        function(game) {
+          return game.manager + " // " + game.score.toFixed(1);
+        },
+        performanceDetail
+      );
     }
 
-    const byWins = [...managerList]
-      .sort(function(a, b) { return b.wins - a.wins; })[0];
-
-    const byPoints = [...managerList]
-      .sort(function(a, b) { return b.pointsFor - a.pointsFor; })[0];
-
-    const byPct = [...managerList]
-      .sort(function(a, b) { return b.winPct - a.winPct; })[0];
-
-    const byTitles = [...managerList]
-      .sort(function(a, b) {
-        return b.championships - a.championships || b.wins - a.wins;
-      })[0];
-
-    document.getElementById("mostWins").textContent = byWins ? byWins.name : "—";
-    document.getElementById("mostWinsDetail").textContent =
-      byWins ? byWins.wins + " CAREER WINS" : "";
-
-    document.getElementById("mostPoints").textContent = byPoints ? byPoints.name : "—";
-    document.getElementById("mostPointsDetail").textContent =
-      byPoints ? byPoints.pointsFor.toFixed(1) + " CAREER POINTS" : "";
-
-    document.getElementById("bestPct").textContent = byPct ? byPct.name : "—";
-    document.getElementById("bestPctDetail").textContent =
-      byPct ? byPct.winPct.toFixed(1) + "% CAREER WIN RATE" : "";
-
-    document.getElementById("mostTitles").textContent = byTitles ? byTitles.name : "—";
-    document.getElementById("mostTitlesDetail").textContent =
-      byTitles ? byTitles.championships + " CHAMPIONSHIPS" : "";
   } catch (error) {
     console.error(error);
     const loading = document.getElementById("loading");
