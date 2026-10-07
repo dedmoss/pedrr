@@ -272,23 +272,42 @@
 
   .champ-grid {
     display: block;
-    max-width: 900px;
+    width: min(100%, 1050px);
   }
 
-  .champ-row, .stat-row {
-    min-height: 34px;
-    display: grid;
-    align-items: center;
+  #championships-view {
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+
+  .champ-item {
     border-bottom: 1px solid var(--row-line);
   }
 
-  .champ-row {
-    grid-template-columns: 90px 220px 1fr;
-    gap: 18px;
+  .champ-summary {
+    appearance: none;
+    width: 100%;
     min-height: 48px;
+    display: grid;
+    grid-template-columns: 76px 180px minmax(0, 1fr) 24px;
+    gap: 18px;
+    align-items: center;
+    border: 0;
+    background: transparent;
+    padding: 0 8px 0 0;
+    color: var(--text);
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
     font-size: 14px;
   }
 
+  .champ-summary:hover,
+  .champ-summary:focus-visible {
+    background: var(--hover);
+  }
+
+  .champ-summary .year,
   .year, .label {
     color: var(--green);
   }
@@ -303,6 +322,140 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .champ-toggle {
+    color: var(--accent);
+    text-align: right;
+    font-weight: 700;
+  }
+
+  .champ-detail {
+    padding: 8px 18px 20px 94px;
+    background: var(--panel);
+    border-top: 1px dashed var(--row-line);
+  }
+
+  .champ-detail[hidden] {
+    display: none;
+  }
+
+  .champ-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+    margin-bottom: 18px;
+    font-size: 12px;
+  }
+
+  .champ-meta-label,
+  .champ-section-label {
+    color: var(--dim);
+    font-size: 10px;
+    letter-spacing: .6px;
+  }
+
+  .champ-meta-value {
+    color: var(--strong);
+    font-weight: 700;
+  }
+
+  .champ-title-result {
+    margin-bottom: 20px;
+  }
+
+  .champ-title-score {
+    margin-top: 5px;
+    color: var(--strong);
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  .champ-title-score .winner {
+    color: var(--accent);
+  }
+
+  .champ-playoffs {
+    margin-bottom: 18px;
+  }
+
+  .champ-round {
+    margin-top: 10px;
+  }
+
+  .champ-round-name {
+    color: var(--green);
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+
+  .champ-game {
+    display: grid;
+    grid-template-columns: minmax(130px, 1fr) 62px 22px minmax(130px, 1fr) 62px;
+    gap: 8px;
+    align-items: center;
+    min-height: 27px;
+    color: var(--secondary);
+    font-size: 12px;
+  }
+
+  .champ-game .score {
+    text-align: right;
+    color: var(--text);
+  }
+
+  .champ-game .versus {
+    text-align: center;
+    color: var(--dim);
+  }
+
+  .champ-game.champion-path {
+    color: var(--strong);
+    font-weight: 700;
+  }
+
+  .champ-roster {
+    margin-top: 16px;
+  }
+
+  .champ-roster-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 30px;
+    row-gap: 4px;
+    margin-top: 7px;
+  }
+
+  .champ-player {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 8px;
+    font-size: 11px;
+  }
+
+  .champ-player-pos {
+    color: var(--green);
+  }
+
+  .champ-player-name {
+    color: var(--secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .champ-note {
+    margin-top: 12px;
+    color: var(--dim);
+    font-size: 10px;
+  }
+
+  .stat-row {
+    min-height: 34px;
+    display: grid;
+    align-items: center;
+    border-bottom: 1px solid var(--row-line);
   }
 
   .stats {
@@ -458,6 +611,17 @@
     .main { min-height: 650px; }
     .view { overflow: auto; }
     .champ-grid { grid-template-columns: 1fr; }
+    .champ-summary {
+      grid-template-columns: 54px 90px minmax(0, 1fr) 20px;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .champ-detail { padding: 10px 8px 18px 12px; }
+    .champ-game {
+      grid-template-columns: minmax(90px, 1fr) 52px 18px minmax(90px, 1fr) 52px;
+      font-size: 10px;
+    }
+    .champ-roster-list { grid-template-columns: 1fr; }
     .stat-row { grid-template-columns: 1fr; gap: 4px; padding: 10px 0; }
     .record-group { grid-template-columns: 1fr; gap: 8px; }
     .record-entry { grid-template-columns: 34px 170px minmax(260px, 1fr); }
@@ -1248,10 +1412,46 @@ async function buildSite() {
 
         if (Number(team.rankCalculatedFinal) === 1) {
           manager.championships++;
+
+          const championRecord = (team.record && team.record.overall) || {};
+
+          const roster = ((team.roster && team.roster.entries) || [])
+            .map(function(entry) {
+              const pool = entry.playerPoolEntry || {};
+              const player = pool.player || {};
+
+              return {
+                name: player.fullName || "Unknown",
+                positionId: Number(player.defaultPositionId || 0),
+                lineupSlotId: Number(entry.lineupSlotId)
+              };
+            })
+            .filter(function(player) {
+              return player.name !== "Unknown";
+            })
+            .sort(function(a, b) {
+              const aBench = a.lineupSlotId === 20 || a.lineupSlotId === 21;
+              const bBench = b.lineupSlotId === 20 || b.lineupSlotId === 21;
+
+              if (aBench !== bBench) return aBench ? 1 : -1;
+              return a.positionId - b.positionId || a.name.localeCompare(b.name);
+            });
+
           champions.push({
             year: year,
             manager: name,
-            team: team.name || ((team.location || "") + " " + (team.nickname || "")).trim()
+            teamId: team.id,
+            team: team.name || ((team.location || "") + " " + (team.nickname || "")).trim(),
+            seed: Number(team.playoffSeed || 0),
+            regularSeason: {
+              wins: Number(championRecord.wins || 0),
+              losses: Number(championRecord.losses || 0),
+              ties: Number(championRecord.ties || 0),
+              pointsFor: Number(championRecord.pointsFor || 0),
+              pointsAgainst: Number(championRecord.pointsAgainst || 0)
+            },
+            roster: roster,
+            playoffGames: []
           });
         }
       });
@@ -1334,6 +1534,22 @@ async function buildSite() {
 
           const homeStats = getPlayoffManager(homeTeam.manager);
           const awayStats = getPlayoffManager(awayTeam.manager);
+
+          const seasonChampion = champions.find(function(champion) {
+            return champion.year === year;
+          });
+
+          if (seasonChampion) {
+            seasonChampion.playoffGames.push({
+              period: period,
+              homeManager: homeTeam.manager,
+              homeTeam: homeTeam.team,
+              homeScore: homeScore,
+              awayManager: awayTeam.manager,
+              awayTeam: awayTeam.team,
+              awayScore: awayScore
+            });
+          }
 
           homeStats.pointsFor += homeScore;
           homeStats.pointsAgainst += awayScore;
@@ -1483,14 +1699,196 @@ async function buildSite() {
     const championsBox = document.getElementById("champions");
     championsBox.innerHTML = "";
 
-    champions.forEach(function(champion) {
-      const row = document.createElement("div");
-      row.className = "champ-row";
-      row.innerHTML =
+    function positionName(positionId) {
+      const positions = {
+        1: "QB",
+        2: "RB",
+        3: "WR",
+        4: "TE",
+        5: "K",
+        16: "D/ST"
+      };
+
+      return positions[positionId] || "FLEX";
+    }
+
+    function roundName(index, totalRounds) {
+      const roundsRemaining = totalRounds - index;
+
+      if (roundsRemaining === 1) return "CHAMPIONSHIP";
+      if (roundsRemaining === 2) return "SEMIFINALS";
+      if (roundsRemaining === 3) return "QUARTERFINALS";
+
+      return "PLAYOFF ROUND " + (index + 1);
+    }
+
+    champions.forEach(function(champion, championIndex) {
+      const item = document.createElement("div");
+      item.className = "champ-item";
+
+      const summary = document.createElement("button");
+      summary.type = "button";
+      summary.className = "champ-summary";
+
+      const detailId = "champ-detail-" + champion.year;
+      const expanded = championIndex === 0;
+
+      summary.setAttribute("aria-expanded", expanded ? "true" : "false");
+      summary.setAttribute("aria-controls", detailId);
+
+      summary.innerHTML =
         '<div class="year">' + champion.year + '</div>' +
         '<div class="champ-manager">' + champion.manager + '</div>' +
-        '<div class="champ-team">' + champion.team + '</div>';
-      championsBox.appendChild(row);
+        '<div class="champ-team">' + champion.team + '</div>' +
+        '<div class="champ-toggle">' + (expanded ? "[-]" : "[+]") + '</div>';
+
+      const detail = document.createElement("div");
+      detail.className = "champ-detail";
+      detail.id = detailId;
+      detail.hidden = !expanded;
+
+      const record = champion.regularSeason || {};
+      const recordText =
+        Number(record.wins || 0) + "-" +
+        Number(record.losses || 0) +
+        (Number(record.ties || 0) ? "-" + Number(record.ties || 0) : "");
+
+      const periods = Array.from(
+        new Set(
+          (champion.playoffGames || []).map(function(game) {
+            return game.period;
+          })
+        )
+      ).sort(function(a, b) { return a - b; });
+
+      const lastPeriod = periods.length ? periods[periods.length - 1] : null;
+      const championshipGame = (champion.playoffGames || []).find(function(game) {
+        return game.period === lastPeriod;
+      });
+
+      let titleResultHtml = "";
+
+      if (championshipGame) {
+        const homeWon = championshipGame.homeScore > championshipGame.awayScore;
+        const winnerManager = homeWon
+          ? championshipGame.homeManager
+          : championshipGame.awayManager;
+        const loserManager = homeWon
+          ? championshipGame.awayManager
+          : championshipGame.homeManager;
+        const winnerScore = homeWon
+          ? championshipGame.homeScore
+          : championshipGame.awayScore;
+        const loserScore = homeWon
+          ? championshipGame.awayScore
+          : championshipGame.homeScore;
+
+        titleResultHtml =
+          '<div class="champ-title-result">' +
+            '<div class="champ-section-label">CHAMPIONSHIP RESULT</div>' +
+            '<div class="champ-title-score">' +
+              '<span class="winner">' + winnerManager + '</span> ' +
+              winnerScore.toFixed(1) +
+              ' &nbsp;—&nbsp; ' +
+              loserManager + ' ' + loserScore.toFixed(1) +
+            '</div>' +
+          '</div>';
+      }
+
+      let playoffHtml =
+        '<div class="champ-playoffs">' +
+          '<div class="champ-section-label">CHAMPIONSHIP BRACKET</div>';
+
+      periods.forEach(function(period, periodIndex) {
+        const games = (champion.playoffGames || []).filter(function(game) {
+          return game.period === period;
+        });
+
+        playoffHtml +=
+          '<div class="champ-round">' +
+            '<div class="champ-round-name">' +
+              roundName(periodIndex, periods.length) +
+            '</div>';
+
+        games.forEach(function(game) {
+          const onChampionPath =
+            game.homeManager === champion.manager ||
+            game.awayManager === champion.manager;
+
+          playoffHtml +=
+            '<div class="champ-game' +
+              (onChampionPath ? ' champion-path' : '') +
+            '">' +
+              '<div>' + game.homeManager + '</div>' +
+              '<div class="score">' + game.homeScore.toFixed(1) + '</div>' +
+              '<div class="versus">vs</div>' +
+              '<div>' + game.awayManager + '</div>' +
+              '<div class="score">' + game.awayScore.toFixed(1) + '</div>' +
+            '</div>';
+        });
+
+        playoffHtml += '</div>';
+      });
+
+      playoffHtml += '</div>';
+
+      let rosterHtml =
+        '<div class="champ-roster">' +
+          '<div class="champ-section-label">FINAL ROSTER SNAPSHOT</div>' +
+          '<div class="champ-roster-list">';
+
+      (champion.roster || []).forEach(function(player) {
+        rosterHtml +=
+          '<div class="champ-player">' +
+            '<div class="champ-player-pos">' +
+              positionName(player.positionId) +
+            '</div>' +
+            '<div class="champ-player-name">' +
+              player.name +
+            '</div>' +
+          '</div>';
+      });
+
+      rosterHtml += '</div></div>';
+
+      const earlyPlayoffNote = champion.year <= 2011
+        ? '<div class="champ-note">2010-11 PLAYOFF MATCHUPS WERE TWO-WEEK SERIES; SCORES SHOWN ARE ESPN AGGREGATES.</div>'
+        : '';
+
+      detail.innerHTML =
+        '<div class="champ-meta">' +
+          '<div><span class="champ-meta-label">REGULAR SEASON</span><br>' +
+            '<span class="champ-meta-value">' + recordText + '</span></div>' +
+          '<div><span class="champ-meta-label">POINTS FOR</span><br>' +
+            '<span class="champ-meta-value">' +
+              Number(record.pointsFor || 0).toFixed(1) +
+            '</span></div>' +
+          '<div><span class="champ-meta-label">POINTS AGAINST</span><br>' +
+            '<span class="champ-meta-value">' +
+              Number(record.pointsAgainst || 0).toFixed(1) +
+            '</span></div>' +
+          '<div><span class="champ-meta-label">PLAYOFF SEED</span><br>' +
+            '<span class="champ-meta-value">#' +
+              (champion.seed || "—") +
+            '</span></div>' +
+        '</div>' +
+        titleResultHtml +
+        playoffHtml +
+        rosterHtml +
+        earlyPlayoffNote;
+
+      summary.addEventListener("click", function() {
+        const isExpanded = summary.getAttribute("aria-expanded") === "true";
+        summary.setAttribute("aria-expanded", isExpanded ? "false" : "true");
+        detail.hidden = isExpanded;
+
+        const toggle = summary.querySelector(".champ-toggle");
+        toggle.textContent = isExpanded ? "[+]" : "[-]";
+      });
+
+      item.appendChild(summary);
+      item.appendChild(detail);
+      championsBox.appendChild(item);
     });
 
     if (allGames.length) {
