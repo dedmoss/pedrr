@@ -1123,7 +1123,29 @@ function renderRecords() {
     return b.winPct - a.winPct || b.wins - a.wins;
   }).slice(0,3);
 
-  const allTimeWins = allTimeRows.slice()
+  const completedAllTimeMap = {};
+  completed.forEach(function(row) {
+    if (!completedAllTimeMap[row.manager]) {
+      completedAllTimeMap[row.manager] = {
+        manager:row.manager,
+        wins:0,
+        losses:0,
+        ties:0,
+        winPct:0
+      };
+    }
+
+    const item = completedAllTimeMap[row.manager];
+    item.wins += row.wins;
+    item.losses += row.losses;
+    item.ties += row.ties;
+  });
+
+  const allTimeWins = Object.values(completedAllTimeMap)
+    .map(function(row) {
+      row.winPct = pct(row.wins,row.losses,row.ties);
+      return row;
+    })
     .sort(function(a,b) { return b.wins - a.wins || b.winPct - a.winPct; })
     .slice(0,3);
 
