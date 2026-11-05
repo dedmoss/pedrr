@@ -377,6 +377,42 @@
     font-variant-numeric:tabular-nums;
   }
 
+  .champ-roster {
+    grid-column:1 / -1;
+    margin-top:4px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+
+  .champ-roster-title {
+    color:var(--accent);
+    font-size:10px;
+    font-weight:850;
+    letter-spacing:.8px;
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+
+  .champ-roster-grid {
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:7px;
+  }
+
+  .champ-player {
+    min-width:0;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--panel);
+    color:var(--strong);
+    font-size:11px;
+    font-weight:700;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
   .year, .record-title { color:var(--accent); font-weight:800; }
   .champ-manager { color:var(--strong); font-weight:800; }
   .champ-team { color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -579,6 +615,7 @@
     .record-book { grid-template-columns:1fr; min-width:0; }
     .champ-row { grid-template-columns:58px 90px minmax(180px,1fr) 76px 14px; gap:8px; font-size:12px; }
     .champ-detail { grid-template-columns:80px minmax(150px,1fr) 70px minmax(150px,1fr); }
+    .champ-roster-grid { grid-template-columns:repeat(2,minmax(150px,1fr)); }
   }
 </style>
 </head>
@@ -937,6 +974,31 @@ function matchupScore(side) {
   return (score.wins || 0) + "-" + (score.losses || 0) + "-" + (score.ties || 0);
 }
 
+function championshipRoster(raw, teamId) {
+  const team = (raw.teams || []).find(function(item) {
+    return Number(item.id) === Number(teamId);
+  });
+
+  if (!team || !team.roster || !team.roster.entries) return [];
+
+  return team.roster.entries
+    .map(function(entry) {
+      const pool = entry.playerPoolEntry || {};
+      const player = pool.player || {};
+      return {
+        name:player.fullName || "",
+        slot:Number(entry.lineupSlotId || 0)
+      };
+    })
+    .filter(function(player) { return player.name; })
+    .sort(function(a,b) {
+      const aReserve = a.slot === 12 || a.slot === 13 || a.slot === 14 || a.slot === 15;
+      const bReserve = b.slot === 12 || b.slot === 13 || b.slot === 14 || b.slot === 15;
+      if (aReserve !== bReserve) return aReserve ? 1 : -1;
+      return a.slot - b.slot || a.name.localeCompare(b.name);
+    });
+}
+
 function renderChampions() {
   const box = document.getElementById("champions");
   box.innerHTML = "";
@@ -961,7 +1023,8 @@ function renderChampions() {
       champions.push({
         champion:champion,
         runnerUp:runnerUp,
-        final:finals[0] || null
+        final:finals[0] || null,
+        roster:championshipRoster(raw, champion.teamId)
       });
     });
 
@@ -1005,6 +1068,19 @@ function renderChampions() {
         '<div><div class="final-manager">' + runner.manager + '</div><div class="final-team">' + runner.team + "</div></div>";
     } else {
       detail.innerHTML = '<div class="final-label">Final result unavailable from ESPN archive.</div>';
+    }
+
+    if (item.roster && item.roster.length) {
+      const roster = document.createElement("div");
+      roster.className = "champ-roster";
+      roster.innerHTML =
+        '<div class="champ-roster-title">Championship Roster // ' + item.roster.length + ' Players</div>' +
+        '<div class="champ-roster-grid">' +
+          item.roster.map(function(player) {
+            return '<div class="champ-player">' + player.name + '</div>';
+          }).join("") +
+        "</div>";
+      detail.appendChild(roster);
     }
 
     details.appendChild(detail);
