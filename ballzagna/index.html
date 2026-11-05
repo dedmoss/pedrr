@@ -660,7 +660,7 @@
     </section>
 
     <section id="records-view" class="view">
-      <div class="hint">TOP THREE PER CATEGORY // COMPLETED SEASONS + CURRENT ALL-TIME TOTALS</div>
+      <div class="hint">RECORD BOOK // COMPLETED SEASONS THROUGH 2025</div>
       <div id="record-book" class="record-book"></div>
     </section>
 
@@ -682,6 +682,7 @@
 const LEAGUE_ID = "1739849790";
 const CURRENT_SEASON = 2027;
 const FIRST_SEASON = 2021;
+const RECORD_BOOK_LAST_SEASON = 2025;
 const SEASONS = [2021, 2022, 2023, 2024, 2025, 2026, 2027];
 
 const SHORT_NAMES = {
@@ -1061,7 +1062,7 @@ function recordGroup(title, entries, valueFn, detailFn) {
 function getPerfectWeeks() {
   const perfect = [];
 
-  SEASONS.forEach(function(year) {
+  SEASONS.filter(function(year) { return year <= RECORD_BOOK_LAST_SEASON; }).forEach(function(year) {
     const raw = seasonData[year] || {};
     const rows = archive[year] || [];
     const teamMap = {};
@@ -1107,7 +1108,7 @@ function renderRecords() {
   box.innerHTML = "";
 
   const completed = [];
-  SEASONS.filter(function(year) { return year < CURRENT_SEASON; })
+  SEASONS.filter(function(year) { return year <= RECORD_BOOK_LAST_SEASON; })
     .forEach(function(year) {
       (archive[year] || []).forEach(function(row) { completed.push(row); });
     });
