@@ -463,11 +463,6 @@ const CURRENT_SEASON = 2027;
 const FIRST_SEASON = 2021;
 const SEASONS = [2021, 2022, 2023, 2024, 2025, 2026, 2027];
 
-const CURRENT_MANAGERS = new Set([
-  "Carter","Belsito","Ben","Doug M.","David","Roth",
-  "Geoff","Timmy","Morgan","Brian","Alex","Cam"
-]);
-
 const SHORT_NAMES = {
   "Doug Moss":"Doug M.",
   "Douglas Vos":"Vos",
@@ -599,7 +594,6 @@ function renderCurrent(live) {
 
   sortStandings(currentRows).forEach(function(row,index) {
     const tr = document.createElement("tr");
-    tr.className = CURRENT_MANAGERS.has(row.manager) ? "alltime-current" : "alltime-former";
     tr.innerHTML =
       "<td>" + (index + 1) + "</td>" +
       '<td class="team">' + row.team + "</td>" +
@@ -655,6 +649,9 @@ function buildAllTime() {
 }
 
 function renderAllTime() {
+  const currentManagers = new Set(
+    (archive[CURRENT_SEASON] || []).map(function(row) { return row.manager; })
+  );
   const key = allTimeSort.key;
   const direction = allTimeSort.direction === "asc" ? 1 : -1;
 
@@ -684,6 +681,7 @@ function renderAllTime() {
 
   rows.forEach(function(row,index) {
     const tr = document.createElement("tr");
+    tr.className = currentManagers.has(row.manager) ? "alltime-current" : "alltime-former";
     tr.innerHTML =
       "<td>" + (index + 1) + "</td>" +
       '<td class="team">' + row.manager + "</td>" +
