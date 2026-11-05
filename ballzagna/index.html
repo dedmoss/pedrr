@@ -317,17 +317,64 @@
     gap:10px;
   }
 
+  .champ-card {
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:var(--panel);
+    overflow:hidden;
+  }
+
+  .champ-card summary {
+    list-style:none;
+    cursor:pointer;
+  }
+
+  .champ-card summary::-webkit-details-marker { display:none; }
+
   .champ-row {
     display:grid;
-    grid-template-columns:90px 160px minmax(0,1fr) 110px;
+    grid-template-columns:90px 160px minmax(0,1fr) 110px 18px;
     gap:18px;
     align-items:center;
     min-height:58px;
     padding:0 16px;
-    border:1px solid var(--line);
-    border-radius:12px;
-    background:var(--panel);
     font-size:14px;
+  }
+
+  .champ-chevron {
+    color:var(--dim);
+    font-size:15px;
+    transition:transform .16s ease;
+  }
+
+  .champ-card[open] .champ-chevron { transform:rotate(90deg); }
+
+  .champ-detail {
+    display:grid;
+    grid-template-columns:110px minmax(0,1fr) 90px minmax(0,1fr);
+    gap:12px 16px;
+    align-items:center;
+    padding:14px 16px 16px;
+    border-top:1px solid var(--line);
+    background:var(--panel-2);
+    font-size:12px;
+  }
+
+  .final-label {
+    color:var(--accent);
+    font-size:10px;
+    font-weight:850;
+    letter-spacing:.8px;
+    text-transform:uppercase;
+  }
+
+  .final-manager { color:var(--strong); font-weight:800; }
+  .final-team { color:var(--muted); }
+  .final-score {
+    color:var(--strong);
+    font-weight:850;
+    text-align:center;
+    font-variant-numeric:tabular-nums;
   }
 
   .year, .record-title { color:var(--accent); font-weight:800; }
@@ -347,6 +394,18 @@
     border:1px solid var(--line);
     border-radius:14px;
     background:var(--panel);
+  }
+
+  .record-group.perfect-weeks {
+    grid-column:1 / -1;
+  }
+
+  .perfect-weeks .record-entry {
+    grid-template-columns:70px 90px minmax(0,1fr);
+  }
+
+  .perfect-weeks .record-entry.dimmed {
+    opacity:1;
   }
 
   .record-title {
@@ -388,7 +447,8 @@
     .view { overflow-x:auto; }
     table { min-width:720px; }
     .record-book { grid-template-columns:1fr; min-width:0; }
-    .champ-row { grid-template-columns:58px 90px minmax(180px,1fr) 76px; gap:8px; font-size:12px; }
+    .champ-row { grid-template-columns:58px 90px minmax(180px,1fr) 76px 14px; gap:8px; font-size:12px; }
+    .champ-detail { grid-template-columns:80px minmax(150px,1fr) 70px minmax(150px,1fr); }
   }
 </style>
 </head>
@@ -517,6 +577,7 @@ const FALLBACK_CURRENT = [
 ];
 
 let archive = {};
+let seasonData = {};
 let currentRows = [];
 let allTimeRows = [];
 let allTimeSort = { key:"wins", direction:"desc" };
@@ -575,6 +636,7 @@ function normalizeSeason(year, data) {
 
     return {
       year:year,
+      teamId:team.id,
       team:teamName(team),
       manager:managerName(members[ownerId]),
       wins:w,
@@ -726,6 +788,11 @@ document.querySelectorAll("#alltime-table th[data-sort]").forEach(function(th) {
   });
 });
 
+function matchupScore(side) {
+  const score = (side && side.cumulativeScore) || {};
+  return (score.wins || 0) + "-" + (score.losses || 0) + "-" + (score.ties || 0);
+}
+
 function renderChampions() {
   const box = document.getElementById("champions");
   box.innerHTML = "";
@@ -736,26 +803,68 @@ function renderChampions() {
     .forEach(function(year) {
       const rows = archive[year] || [];
       const champion = rows.find(function(row) { return row.finish === 1; });
-      if (champion) champions.push(champion);
+      const runnerUp = rows.find(function(row) { return row.finish === 2; });
+      if (!champion) return;
+
+      const raw = seasonData[year] || {};
+      const finals = (raw.schedule || []).filter(function(matchup) {
+        const ids = [matchup.home && matchup.home.teamId, matchup.away && matchup.away.teamId];
+        return runnerUp && ids.includes(champion.teamId) && ids.includes(runnerUp.teamId);
+      }).sort(function(a,b) {
+        return Number(b.matchupPeriodId || 0) - Number(a.matchupPeriodId || 0);
+      });
+
+      champions.push({
+        champion:champion,
+        runnerUp:runnerUp,
+        final:finals[0] || null
+      });
     });
 
-  champions.sort(function(a,b) { return b.year - a.year; });
+  champions.sort(function(a,b) { return b.champion.year - a.champion.year; });
 
   if (!champions.length) {
-    box.innerHTML = '<div class="error">CHAMPIONSHIP HISTORY UNAVAILABLE.</div>';
+    box.innerHTML = '<div class="hint">CHAMPIONSHIP HISTORY UNAVAILABLE.</div>';
     return;
   }
 
-  champions.forEach(function(row) {
-    const div = document.createElement("div");
-    div.className = "champ-row";
-    div.innerHTML =
-      '<div class="year">' + row.year + "</div>" +
-      '<div class="champ-manager">' + row.manager + "</div>" +
-      '<div class="champ-team">' + row.team + "</div>" +
-      '<div class="champ-record">' + row.wins + "-" + row.losses +
-        (row.ties ? "-" + row.ties : "") + "</div>";
-    box.appendChild(div);
+  champions.forEach(function(item) {
+    const row = item.champion;
+    const details = document.createElement("details");
+    details.className = "champ-card";
+
+    const summary = document.createElement("summary");
+    summary.innerHTML =
+      '<div class="champ-row">' +
+        '<div class="year">' + row.year + "</div>" +
+        '<div class="champ-manager">' + row.manager + "</div>" +
+        '<div class="champ-team">' + row.team + "</div>" +
+        '<div class="champ-record">' + row.wins + "-" + row.losses +
+          (row.ties ? "-" + row.ties : "") + "</div>" +
+        '<div class="champ-chevron">›</div>' +
+      "</div>";
+    details.appendChild(summary);
+
+    const final = item.final;
+    const runner = item.runnerUp;
+    const detail = document.createElement("div");
+    detail.className = "champ-detail";
+
+    if (final && runner) {
+      const championSide = final.home && final.home.teamId === row.teamId ? final.home : final.away;
+      const runnerSide = final.home && final.home.teamId === runner.teamId ? final.home : final.away;
+
+      detail.innerHTML =
+        '<div class="final-label">Final // Week ' + final.matchupPeriodId + "</div>" +
+        '<div><div class="final-manager">' + row.manager + '</div><div class="final-team">' + row.team + "</div></div>" +
+        '<div class="final-score">' + matchupScore(championSide) + "</div>" +
+        '<div><div class="final-manager">' + runner.manager + '</div><div class="final-team">' + runner.team + "</div></div>";
+    } else {
+      detail.innerHTML = '<div class="final-label">Final result unavailable from ESPN archive.</div>';
+    }
+
+    details.appendChild(detail);
+    box.appendChild(details);
   });
 }
 
@@ -806,6 +915,50 @@ function recordGroup(title, entries, valueFn, detailFn) {
   return group;
 }
 
+function getPerfectWeeks() {
+  const perfect = [];
+
+  SEASONS.forEach(function(year) {
+    const raw = seasonData[year] || {};
+    const rows = archive[year] || [];
+    const teamMap = {};
+    rows.forEach(function(row) { teamMap[row.teamId] = row; });
+
+    const regularSeasonEnd = Number(
+      raw.settings && raw.settings.scheduleSettings &&
+      raw.settings.scheduleSettings.matchupPeriodCount || 999
+    );
+
+    (raw.schedule || []).forEach(function(matchup) {
+      ["home","away"].forEach(function(sideName) {
+        const side = matchup[sideName];
+        const score = side && side.cumulativeScore;
+        if (!side || !score) return;
+
+        if (Number(score.wins) === 9 && Number(score.losses) === 0 && Number(score.ties) === 0) {
+          const other = matchup[sideName === "home" ? "away" : "home"];
+          const winner = teamMap[side.teamId];
+          const opponent = other ? teamMap[other.teamId] : null;
+
+          perfect.push({
+            year:year,
+            week:Number(matchup.matchupPeriodId || 0),
+            postseason:Number(matchup.matchupPeriodId || 0) > regularSeasonEnd,
+            manager:winner ? winner.manager : "Unknown",
+            team:winner ? winner.team : "Unknown",
+            opponent:opponent ? opponent.manager : "Unknown",
+            opponentTeam:opponent ? opponent.team : "Unknown"
+          });
+        }
+      });
+    });
+  });
+
+  return perfect.sort(function(a,b) {
+    return b.year - a.year || b.week - a.week;
+  });
+}
+
 function renderRecords() {
   const box = document.getElementById("record-book");
   box.innerHTML = "";
@@ -833,6 +986,19 @@ function renderRecords() {
   const allTimeWins = allTimeRows.slice()
     .sort(function(a,b) { return b.wins - a.wins || b.winPct - a.winPct; })
     .slice(0,3);
+
+  const perfectWeeks = getPerfectWeeks();
+  const perfectGroup = recordGroup(
+    "PERFECT WEEKS // 9-0-0",
+    perfectWeeks,
+    function(row) { return row.year + " · W" + row.week; },
+    function(row) {
+      return row.manager + " — " + row.team + " vs " + row.opponent +
+        (row.postseason ? " // PLAYOFFS" : "");
+    }
+  );
+  perfectGroup.classList.add("perfect-weeks");
+  box.appendChild(perfectGroup);
 
   box.appendChild(recordGroup(
     "MOST CATEGORY WINS // SEASON",
@@ -888,16 +1054,17 @@ async function build() {
     SEASONS.map(async function(year) {
       try {
         const data = await fetchSeason(year);
-        return {year:year,rows:normalizeSeason(year,data)};
+        return {year:year,rows:normalizeSeason(year,data),data:data};
       } catch (error) {
         failures.push(year);
-        return {year:year,rows:[]};
+        return {year:year,rows:[],data:null};
       }
     })
   );
 
   results.forEach(function(result) {
     archive[result.year] = result.rows;
+    if (result.data) seasonData[result.year] = result.data;
   });
 
   if (archive[CURRENT_SEASON] && archive[CURRENT_SEASON].length) {
