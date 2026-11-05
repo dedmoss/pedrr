@@ -245,6 +245,25 @@
   .manager { color:var(--muted); }
   .title-count { color:var(--accent); font-weight:850; }
 
+  #alltime-body tr.alltime-current td {
+    color:var(--strong);
+  }
+
+  #alltime-body tr.alltime-current .team {
+    color:#fff;
+    font-weight:800;
+  }
+
+  #alltime-body tr.alltime-former {
+    opacity:.46;
+  }
+
+  #alltime-body tr.alltime-former td,
+  #alltime-body tr.alltime-former .team,
+  #alltime-body tr.alltime-former .title-count {
+    color:#77736f;
+  }
+
   .archive-controls {
     display:flex;
     align-items:center;
@@ -444,6 +463,11 @@ const CURRENT_SEASON = 2027;
 const FIRST_SEASON = 2021;
 const SEASONS = [2021, 2022, 2023, 2024, 2025, 2026, 2027];
 
+const CURRENT_MANAGERS = new Set([
+  "Carter","Belsito","Ben","Doug M.","David","Roth",
+  "Geoff","Timmy","Morgan","Brian","Alex","Cam"
+]);
+
 const SHORT_NAMES = {
   "Doug Moss":"Doug M.",
   "Douglas Vos":"Vos",
@@ -575,6 +599,7 @@ function renderCurrent(live) {
 
   sortStandings(currentRows).forEach(function(row,index) {
     const tr = document.createElement("tr");
+    tr.className = CURRENT_MANAGERS.has(row.manager) ? "alltime-current" : "alltime-former";
     tr.innerHTML =
       "<td>" + (index + 1) + "</td>" +
       '<td class="team">' + row.team + "</td>" +
