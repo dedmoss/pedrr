@@ -8,162 +8,228 @@
   * { box-sizing: border-box; }
 
   :root {
-    --bg:#050607;
-    --panel:#090b0d;
-    --text:#e6e6e6;
-    --muted:#777;
-    --dim:#4f5357;
-    --line:#565b60;
-    --row:#25282b;
-    --hover:#0f1215;
-    --strong:#fff;
-    --secondary:#8c9196;
-    --accent:#ff62b8;
-    --green:#8cff9a;
-  }
-
-  html.pink {
-    --bg:#ff8fcb;
-    --panel:#ff7bc2;
-    --text:#260014;
-    --muted:#5b2942;
-    --dim:#75445d;
-    --line:#9e4e77;
-    --row:#d36b9f;
-    --hover:#ffabd9;
-    --strong:#140009;
-    --secondary:#5a2841;
-    --accent:#8a004d;
-    --green:var(--accent);
+    --bg:#0d0d0f;
+    --panel:#151518;
+    --panel-2:#1b1b1f;
+    --text:#f6f3ee;
+    --muted:#a6a19a;
+    --dim:#6f6b66;
+    --line:#2b2b30;
+    --row:#242428;
+    --hover:#201a16;
+    --strong:#ffffff;
+    --accent:#ff6a00;
+    --accent-soft:#ff8a33;
+    --accent-wash:rgba(255,106,0,.12);
+    --cream:#f3eadf;
   }
 
   html, body {
     margin:0;
     width:100%;
     min-height:100%;
-    background:var(--bg);
+    background:
+      radial-gradient(circle at 90% 5%, rgba(255,106,0,.10), transparent 26rem),
+      var(--bg);
     color:var(--text);
-    font-family:"Courier New", Courier, monospace;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
   }
-
-  html.pink body { font-weight:600; }
 
   button, select, table { font:inherit; }
 
   .app {
     min-height:100vh;
     display:grid;
-    grid-template-columns:260px minmax(0,1fr);
+    grid-template-columns:250px minmax(0,1fr);
   }
 
   .sidebar {
     min-height:100vh;
-    padding:22px 18px 18px;
+    padding:28px 20px 22px;
     border-right:1px solid var(--line);
+    background:rgba(15,15,17,.92);
     display:flex;
     flex-direction:column;
   }
 
   .brand {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:40px;
+  }
+
+  .brand-ball {
+    width:38px;
+    height:38px;
+    flex:0 0 38px;
+    border-radius:50%;
+    background:var(--accent);
+    position:relative;
+    box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 8px 28px rgba(255,106,0,.18);
+    overflow:hidden;
+  }
+
+  .brand-ball::before,
+  .brand-ball::after {
+    content:"";
+    position:absolute;
+    inset:-8px 16px;
+    border:1.5px solid rgba(35,18,8,.72);
+    border-radius:50%;
+  }
+
+  .brand-ball::after {
+    inset:16px -8px;
+  }
+
+  .brand-copy strong {
+    display:block;
     color:var(--strong);
-    font-size:15px;
-    font-weight:700;
-    line-height:1.35;
-    letter-spacing:.5px;
+    font-size:18px;
+    line-height:1;
+    letter-spacing:.7px;
+  }
+
+  .brand-copy span {
+    display:block;
+    color:var(--muted);
+    font-size:10px;
+    margin-top:5px;
+    letter-spacing:1.2px;
     text-transform:uppercase;
-    margin-bottom:38px;
   }
 
   .menu {
     display:flex;
     flex-direction:column;
-    gap:16px;
+    gap:8px;
   }
 
-  .nav-btn, .theme-toggle {
+  .nav-btn {
     appearance:none;
     border:0;
+    border-radius:10px;
     background:transparent;
     color:var(--muted);
-    padding:0;
+    padding:10px 12px;
     cursor:pointer;
+    text-align:left;
+    font-size:13px;
+    font-weight:650;
+    transition:.16s ease;
   }
 
-  .nav-btn { text-align:left; white-space:nowrap; }
-  .nav-btn:hover, .theme-toggle:hover { color:var(--strong); }
-  .nav-btn.active { color:var(--accent); font-weight:700; }
-  .nav-btn.active::before { content:"> "; color:var(--strong); }
+  .nav-btn:hover {
+    color:var(--strong);
+    background:var(--panel-2);
+  }
+
+  .nav-btn.active {
+    color:var(--strong);
+    background:var(--accent-wash);
+    box-shadow:inset 3px 0 0 var(--accent);
+  }
 
   .sidebar-meta {
     margin-top:auto;
+    padding-top:18px;
+    border-top:1px solid var(--line);
     color:var(--dim);
     font-size:10px;
-    line-height:1.5;
+    line-height:1.65;
+    letter-spacing:.5px;
     text-transform:uppercase;
   }
 
   .main {
     min-width:0;
-    padding:20px 26px 28px;
+    padding:32px 34px 40px;
   }
 
   .topline {
     display:flex;
     justify-content:space-between;
-    align-items:center;
+    align-items:flex-end;
     gap:20px;
-    padding-bottom:8px;
+    padding-bottom:18px;
     border-bottom:1px solid var(--line);
-    color:var(--strong);
-    font-size:13px;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:1px;
   }
 
-  .theme-toggle { color:var(--accent); font-weight:700; }
+  #view-title {
+    color:var(--strong);
+    font-size:28px;
+    font-weight:800;
+    letter-spacing:-.7px;
+  }
 
-  .view { display:none; padding-top:16px; }
+  .topline::after {
+    content:"BALLZAGNA.COM";
+    color:var(--accent);
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:1.5px;
+  }
+
+  .view { display:none; padding-top:24px; }
   .view.active { display:block; }
 
   .hint {
-    color:var(--dim);
-    font-size:10px;
-    margin-bottom:12px;
+    color:var(--muted);
+    font-size:11px;
+    font-weight:700;
+    margin-bottom:14px;
     text-transform:uppercase;
+    letter-spacing:.8px;
   }
-
-  .loading, .error {
-    padding-top:8px;
-    font-size:13px;
-  }
-
-  .loading { color:var(--green); }
-  .error { color:#ff7777; white-space:pre-wrap; }
 
   table {
     width:min(100%, 1120px);
-    border-collapse:collapse;
-    table-layout:auto;
+    border-collapse:separate;
+    border-spacing:0;
+    overflow:hidden;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--panel);
     font-size:13px;
   }
 
   th, td {
-    padding:8px 10px;
+    padding:13px 14px;
     border-bottom:1px solid var(--row);
     text-align:right;
     white-space:nowrap;
   }
 
   th {
-    color:var(--green);
-    font-weight:700;
-    border-bottom:1px solid var(--line);
+    color:var(--muted);
+    background:var(--panel-2);
+    font-size:10px;
+    letter-spacing:.8px;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+
+  #alltime-table th[data-sort] {
     cursor:pointer;
+    user-select:none;
+  }
+
+  #alltime-table th[data-sort]:hover {
+    color:var(--accent-soft);
+  }
+
+  #alltime-table th.sorted {
+    color:var(--accent);
+  }
+
+  #alltime-table th.sorted::after {
+    content:" " attr(data-arrow);
+    font-size:10px;
   }
 
   th:first-child, td:first-child {
-    width:42px;
+    width:48px;
     text-align:left;
     color:var(--dim);
   }
@@ -171,89 +237,100 @@
   th:nth-child(2), td:nth-child(2),
   th:nth-child(3), td:nth-child(3) { text-align:left; }
 
+  tbody tr:last-child td { border-bottom:0; }
+  tbody tr { transition:background .14s ease; }
   tbody tr:hover { background:var(--hover); }
 
-  .team { color:var(--strong); font-weight:700; }
-  .manager { color:var(--secondary); }
-  .title-count { color:var(--accent); font-weight:700; }
-
-  .footnote {
-    margin-top:8px;
-    color:var(--dim);
-    font-size:10px;
-  }
+  .team { color:var(--strong); font-weight:750; }
+  .manager { color:var(--muted); }
+  .title-count { color:var(--accent); font-weight:850; }
 
   .archive-controls {
     display:flex;
     align-items:center;
     gap:10px;
-    margin-bottom:14px;
-    color:var(--green);
+    margin-bottom:16px;
+    color:var(--muted);
     font-size:11px;
+    font-weight:800;
+    letter-spacing:.8px;
   }
 
   .archive-controls select {
-    min-height:36px;
+    min-height:40px;
     border:1px solid var(--line);
-    border-radius:0;
-    background:var(--bg);
+    border-radius:9px;
+    background:var(--panel);
     color:var(--strong);
-    padding:6px 10px;
+    padding:7px 34px 7px 12px;
+    outline:none;
+  }
+
+  .archive-controls select:focus {
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-wash);
   }
 
   .champ-grid, .record-book {
     width:min(100%, 980px);
   }
 
+  .champ-grid {
+    display:grid;
+    gap:10px;
+  }
+
   .champ-row {
     display:grid;
-    grid-template-columns:90px 180px minmax(0,1fr) 110px;
+    grid-template-columns:90px 160px minmax(0,1fr) 110px;
     gap:18px;
     align-items:center;
-    min-height:48px;
-    border-bottom:1px solid var(--row);
+    min-height:58px;
+    padding:0 16px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:var(--panel);
     font-size:14px;
   }
 
-  .year, .record-title { color:var(--green); font-weight:700; }
-  .champ-manager { color:var(--strong); font-weight:700; }
-  .champ-team { color:var(--secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .champ-record { color:var(--dim); text-align:right; }
+  .year, .record-title { color:var(--accent); font-weight:800; }
+  .champ-manager { color:var(--strong); font-weight:800; }
+  .champ-team { color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .champ-record { color:var(--dim); text-align:right; font-variant-numeric:tabular-nums; }
+
+  .record-book {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:12px;
+  }
 
   .record-group {
-    display:grid;
-    grid-template-columns:230px minmax(0,1fr);
-    gap:20px;
-    padding:13px 0;
-    border-bottom:1px solid var(--row);
+    display:block;
+    padding:18px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--panel);
   }
 
   .record-title {
-    font-size:12px;
-    padding-top:5px;
+    font-size:11px;
+    margin-bottom:14px;
+    letter-spacing:.7px;
   }
 
   .record-entry {
     display:grid;
-    grid-template-columns:34px 180px minmax(0,1fr);
-    gap:12px;
+    grid-template-columns:34px 90px minmax(0,1fr);
+    gap:10px;
     align-items:center;
-    min-height:27px;
+    min-height:32px;
     font-size:12px;
   }
 
-  .record-entry.dimmed { opacity:.45; }
-  .record-rank { color:var(--accent); }
-  .record-value { color:var(--strong); font-weight:700; }
-  .record-detail { color:var(--secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-
-  .live-badge {
-    display:inline-block;
-    margin-left:8px;
-    color:var(--accent);
-    font-size:10px;
-    font-weight:700;
-  }
+  .record-entry.dimmed { opacity:.48; }
+  .record-rank { color:var(--accent); font-weight:800; }
+  .record-value { color:var(--strong); font-weight:800; }
+  .record-detail { color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
   @media (max-width:850px) {
     .app { grid-template-columns:1fr; }
@@ -261,29 +338,39 @@
       min-height:0;
       border-right:0;
       border-bottom:1px solid var(--line);
+      padding:20px 16px;
     }
-    .menu { gap:10px; }
+    .brand { margin-bottom:18px; }
+    .menu {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
     .sidebar-meta { display:none; }
-    .main { padding:18px 16px 24px; }
+    .main { padding:24px 16px 30px; }
+    #view-title { font-size:24px; }
     .view { overflow-x:auto; }
-    table { min-width:760px; }
-    .champ-row { grid-template-columns:60px 90px minmax(180px,1fr) 80px; gap:8px; font-size:12px; }
-    .record-group { grid-template-columns:1fr; gap:8px; }
-    .record-entry { grid-template-columns:32px 150px minmax(240px,1fr); }
+    table { min-width:720px; }
+    .record-book { grid-template-columns:1fr; min-width:0; }
+    .champ-row { grid-template-columns:58px 90px minmax(180px,1fr) 76px; gap:8px; font-size:12px; }
   }
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar">
-    <div class="brand">BALLZAGNA ARCHIVES<br>2021-2027</div>
+    <div class="brand">
+      <div class="brand-ball" aria-hidden="true"></div>
+      <div class="brand-copy">
+        <strong>BALLZAGNA</strong>
+        <span>Fantasy Basketball Archive</span>
+      </div>
+    </div>
 
     <nav class="menu" aria-label="Ballzagna archive">
-      <button class="nav-btn active" data-view="current-view" data-title="Current Season">[ CURRENT SEASON ]</button>
-      <button class="nav-btn" data-view="alltime-view" data-title="All-Time">[ ALL-TIME ]</button>
-      <button class="nav-btn" data-view="championships-view" data-title="Championships">[ CHAMPIONSHIPS ]</button>
-      <button class="nav-btn" data-view="archive-view" data-title="Season Archive">[ SEASON ARCHIVE ]</button>
-      <button class="nav-btn" data-view="records-view" data-title="Record Book">[ RECORD BOOK ]</button>
+      <button class="nav-btn active" data-view="alltime-view" data-title="All-Time">All-Time</button>
+      <button class="nav-btn" data-view="championships-view" data-title="Championships">Championships</button>
+      <button class="nav-btn" data-view="archive-view" data-title="Season Archive">Season Archive</button>
+      <button class="nav-btn" data-view="records-view" data-title="Record Book">Record Book</button>
     </nav>
 
     <div class="sidebar-meta">
@@ -295,43 +382,22 @@
 
   <main class="main">
     <div class="topline">
-      <span id="view-title">CURRENT SEASON</span>
-      <button id="theme-toggle" class="theme-toggle" type="button">[ PINK ]</button>
+      <span id="view-title">ALL-TIME</span>
     </div>
 
-    <section id="current-view" class="view active">
-      <div class="hint">2026-27 // LIVE ESPN CATEGORY STANDINGS <span id="live-badge" class="live-badge"></span></div>
-      <div id="current-loading" class="loading">READING BALLZAGNA...</div>
-      <table id="current-table" hidden>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>TEAM</th>
-            <th>MANAGER</th>
-            <th>W</th>
-            <th>L</th>
-            <th>T</th>
-            <th>WIN%</th>
-          </tr>
-        </thead>
-        <tbody id="current-body"></tbody>
-      </table>
-      <div class="footnote">W/L/T ARE CATEGORY RESULTS, NOT WEEKLY MATCHUP WINS.</div>
-    </section>
-
-    <section id="alltime-view" class="view">
+    <section id="alltime-view" class="view active">
       <div class="hint">2021-2027 REGULAR-SEASON CATEGORY RESULTS // CURRENT SEASON INCLUDED</div>
       <table id="alltime-table" hidden>
         <thead>
           <tr>
             <th>#</th>
-            <th>MANAGER</th>
-            <th>W</th>
-            <th>L</th>
-            <th>T</th>
-            <th>WIN%</th>
-            <th>SEASONS</th>
-            <th>TITLES</th>
+            <th data-sort="manager">MANAGER</th>
+            <th data-sort="wins">W</th>
+            <th data-sort="losses">L</th>
+            <th data-sort="ties">T</th>
+            <th data-sort="winPct">WIN%</th>
+            <th data-sort="seasons">SEASONS</th>
+            <th data-sort="titles">TITLES</th>
           </tr>
         </thead>
         <tbody id="alltime-body"></tbody>
@@ -412,6 +478,7 @@ const FALLBACK_CURRENT = [
 let archive = {};
 let currentRows = [];
 let allTimeRows = [];
+let allTimeSort = { key:"wins", direction:"desc" };
 
 function managerName(member) {
   if (!member) return "Unknown";
@@ -552,15 +619,41 @@ function buildAllTime() {
   allTimeRows = Object.values(map).map(function(row) {
     row.winPct = pct(row.wins,row.losses,row.ties);
     return row;
-  }).sort(function(a,b) {
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    return b.winPct - a.winPct;
+  });
+
+  renderAllTime();
+  document.getElementById("alltime-table").hidden = false;
+}
+
+function renderAllTime() {
+  const key = allTimeSort.key;
+  const direction = allTimeSort.direction === "asc" ? 1 : -1;
+
+  const rows = allTimeRows.slice().sort(function(a,b) {
+    let av = a[key];
+    let bv = b[key];
+
+    if (typeof av === "string") {
+      return av.localeCompare(bv) * direction;
+    }
+
+    if (av === bv) {
+      return b.winPct - a.winPct || b.wins - a.wins || a.manager.localeCompare(b.manager);
+    }
+
+    return (av - bv) * direction;
+  });
+
+  document.querySelectorAll("#alltime-table th[data-sort]").forEach(function(th) {
+    const active = th.dataset.sort === key;
+    th.classList.toggle("sorted", active);
+    th.dataset.arrow = active ? (allTimeSort.direction === "asc" ? "▲" : "▼") : "";
   });
 
   const body = document.getElementById("alltime-body");
   body.innerHTML = "";
 
-  allTimeRows.forEach(function(row,index) {
+  rows.forEach(function(row,index) {
     const tr = document.createElement("tr");
     tr.innerHTML =
       "<td>" + (index + 1) + "</td>" +
@@ -573,9 +666,20 @@ function buildAllTime() {
       '<td class="title-count">' + row.titles + "</td>";
     body.appendChild(tr);
   });
-
-  document.getElementById("alltime-table").hidden = false;
 }
+
+document.querySelectorAll("#alltime-table th[data-sort]").forEach(function(th) {
+  th.addEventListener("click", function() {
+    const key = th.dataset.sort;
+    if (allTimeSort.key === key) {
+      allTimeSort.direction = allTimeSort.direction === "asc" ? "desc" : "asc";
+    } else {
+      allTimeSort.key = key;
+      allTimeSort.direction = key === "manager" ? "asc" : "desc";
+    }
+    renderAllTime();
+  });
+});
 
 function renderChampions() {
   const box = document.getElementById("champions");
@@ -759,7 +863,6 @@ async function build() {
     archive[CURRENT_SEASON] = currentRows;
   }
 
-  renderCurrent(liveCurrent);
   buildAllTime();
   renderChampions();
   setupArchiveSelector();
@@ -786,24 +889,13 @@ document.querySelectorAll(".nav-btn").forEach(function(button) {
   });
 });
 
-const themeToggle = document.getElementById("theme-toggle");
-
-function applyTheme(theme) {
-  const pink = theme === "pink";
-  document.documentElement.classList.toggle("pink", pink);
-  themeToggle.textContent = pink ? "[ DARK ]" : "[ PINK ]";
-}
-
-applyTheme("dark");
-
-themeToggle.addEventListener("click", function() {
-  applyTheme(document.documentElement.classList.contains("pink") ? "dark" : "pink");
-});
-
 build().catch(function(error) {
-  document.getElementById("current-loading").className = "error";
-  document.getElementById("current-loading").textContent =
-    "BALLZAGNA FAILED TO LOAD.\n" + error.message;
+  console.error("BALLZAGNA FAILED TO LOAD", error);
+  const allTimeView = document.getElementById("alltime-view");
+  const message = document.createElement("div");
+  message.className = "hint";
+  message.textContent = "BALLZAGNA FAILED TO LOAD: " + error.message;
+  allTimeView.prepend(message);
 });
 </script>
 </body>
