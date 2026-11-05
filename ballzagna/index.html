@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ballzagna | Fantasy Basketball Archive</title>
+<style>
+  * { box-sizing: border-box; }
+
+  :root {
+    --bg:#050607;
+    --panel:#090b0d;
+    --text:#e6e6e6;
+    --muted:#777;
+    --dim:#4f5357;
+    --line:#565b60;
+    --row:#25282b;
+    --hover:#0f1215;
+    --strong:#fff;
+    --secondary:#8c9196;
+    --accent:#ff62b8;
+    --green:#8cff9a;
+  }
+
+  html.pink {
+    --bg:#ff8fcb;
+    --panel:#ff7bc2;
+    --text:#260014;
+    --muted:#5b2942;
+    --dim:#75445d;
+    --line:#9e4e77;
+    --row:#d36b9f;
+    --hover:#ffabd9;
+    --strong:#140009;
+    --secondary:#5a2841;
+    --accent:#8a004d;
+    --green:var(--accent);
+  }
+
+  html, body {
+    margin:0;
+    width:100%;
+    min-height:100%;
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Courier New", Courier, monospace;
+  }
+
+  html.pink body { font-weight:600; }
+
+  button, select, table { font:inherit; }
+
+  .app {
+    min-height:100vh;
+    display:grid;
+    grid-template-columns:260px minmax(0,1fr);
+  }
+
+  .sidebar {
+    min-height:100vh;
+    padding:22px 18px 18px;
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+  }
+
+  .brand {
+    color:var(--strong);
+    font-size:15px;
+    font-weight:700;
+    line-height:1.35;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+    margin-bottom:38px;
+  }
+
+  .menu {
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+
+  .nav-btn, .theme-toggle {
+    appearance:none;
+    border:0;
+    background:transparent;
+    color:var(--muted);
+    padding:0;
+    cursor:pointer;
+  }
+
+  .nav-btn { text-align:left; white-space:nowrap; }
+  .nav-btn:hover, .theme-toggle:hover { color:var(--strong); }
+  .nav-btn.active { color:var(--accent); font-weight:700; }
+  .nav-btn.active::before { content:"> "; color:var(--strong); }
+
+  .sidebar-meta {
+    margin-top:auto;
+    color:var(--dim);
+    font-size:10px;
+    line-height:1.5;
+    text-transform:uppercase;
+  }
+
+  .main {
+    min-width:0;
+    padding:20px 26px 28px;
+  }
+
+  .topline {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--line);
+    color:var(--strong);
+    font-size:13px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:1px;
+  }
+
+  .theme-toggle { color:var(--accent); font-weight:700; }
+
+  .view { display:none; padding-top:16px; }
+  .view.active { display:block; }
+
+  .hint {
+    color:var(--dim);
+    font-size:10px;
+    margin-bottom:12px;
+    text-transform:uppercase;
+  }
+
+  .loading, .error {
+    padding-top:8px;
+    font-size:13px;
+  }
+
+  .loading { color:var(--green); }
+  .error { color:#ff7777; white-space:pre-wrap; }
+
+  table {
+    width:min(100%, 1120px);
+    border-collapse:collapse;
+    table-layout:auto;
+    font-size:13px;
+  }
+
+  th, td {
+    padding:8px 10px;
+    border-bottom:1px solid var(--row);
+    text-align:right;
+    white-space:nowrap;
+  }
+
+  th {
+    color:var(--green);
+    font-weight:700;
+    border-bottom:1px solid var(--line);
+    cursor:pointer;
+  }
+
+  th:first-child, td:first-child {
+    width:42px;
+    text-align:left;
+    color:var(--dim);
+  }
+
+  th:nth-child(2), td:nth-child(2),
+  th:nth-child(3), td:nth-child(3) { text-align:left; }
+
+  tbody tr:hover { background:var(--hover); }
+
+  .team { color:var(--strong); font-weight:700; }
+  .manager { color:var(--secondary); }
+  .title-count { color:var(--accent); font-weight:700; }
+
+  .footnote {
+    margin-top:8px;
+    color:var(--dim);
+    font-size:10px;
+  }
+
+  .archive-controls {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+    color:var(--green);
+    font-size:11px;
+  }
+
+  .archive-controls select {
+    min-height:36px;
+    border:1px solid var(--line);
+    border-radius:0;
+    background:var(--bg);
+    color:var(--strong);
+    padding:6px 10px;
+  }
+
+  .champ-grid, .record-book {
+    width:min(100%, 980px);
+  }
+
+  .champ-row {
+    display:grid;
+    grid-template-columns:90px 180px minmax(0,1fr) 110px;
+    gap:18px;
+    align-items:center;
+    min-height:48px;
+    border-bottom:1px solid var(--row);
+    font-size:14px;
+  }
+
+  .year, .record-title { color:var(--green); font-weight:700; }
+  .champ-manager { color:var(--strong); font-weight:700; }
+  .champ-team { color:var(--secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .champ-record { color:var(--dim); text-align:right; }
+
+  .record-group {
+    display:grid;
+    grid-template-columns:230px minmax(0,1fr);
+    gap:20px;
+    padding:13px 0;
+    border-bottom:1px solid var(--row);
+  }
+
+  .record-title {
+    font-size:12px;
+    padding-top:5px;
+  }
+
+  .record-entry {
+    display:grid;
+    grid-template-columns:34px 180px minmax(0,1fr);
+    gap:12px;
+    align-items:center;
+    min-height:27px;
+    font-size:12px;
+  }
+
+  .record-entry.dimmed { opacity:.45; }
+  .record-rank { color:var(--accent); }
+  .record-value { color:var(--strong); font-weight:700; }
+  .record-detail { color:var(--secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .live-badge {
+    display:inline-block;
+    margin-left:8px;
+    color:var(--accent);
+    font-size:10px;
+    font-weight:700;
+  }
+
+  @media (max-width:850px) {
+    .app { grid-template-columns:1fr; }
+    .sidebar {
+      min-height:0;
+      border-right:0;
+      border-bottom:1px solid var(--line);
+    }
+    .menu { gap:10px; }
+    .sidebar-meta { display:none; }
+    .main { padding:18px 16px 24px; }
+    .view { overflow-x:auto; }
+    table { min-width:760px; }
+    .champ-row { grid-template-columns:60px 90px minmax(180px,1fr) 80px; gap:8px; font-size:12px; }
+    .record-group { grid-template-columns:1fr; gap:8px; }
+    .record-entry { grid-template-columns:32px 150px minmax(240px,1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">BALLZAGNA ARCHIVES<br>2021-2027</div>
+
+    <nav class="menu" aria-label="Ballzagna archive">
+      <button class="nav-btn active" data-view="current-view" data-title="Current Season">[ CURRENT SEASON ]</button>
+      <button class="nav-btn" data-view="alltime-view" data-title="All-Time">[ ALL-TIME ]</button>
+      <button class="nav-btn" data-view="championships-view" data-title="Championships">[ CHAMPIONSHIPS ]</button>
+      <button class="nav-btn" data-view="archive-view" data-title="Season Archive">[ SEASON ARCHIVE ]</button>
+      <button class="nav-btn" data-view="records-view" data-title="Record Book">[ RECORD BOOK ]</button>
+    </nav>
+
+    <div class="sidebar-meta">
+      ESPN LEAGUE 1739849790<br>
+      ARCHIVE 2021-2027<br>
+      BALLZAGNA FOREVER
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topline">
+      <span id="view-title">CURRENT SEASON</span>
+      <button id="theme-toggle" class="theme-toggle" type="button">[ PINK ]</button>
+    </div>
+
+    <section id="current-view" class="view active">
+      <div class="hint">2026-27 // LIVE ESPN CATEGORY STANDINGS <span id="live-badge" class="live-badge"></span></div>
+      <div id="current-loading" class="loading">READING BALLZAGNA...</div>
+      <table id="current-table" hidden>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>TEAM</th>
+            <th>MANAGER</th>
+            <th>W</th>
+            <th>L</th>
+            <th>T</th>
+            <th>WIN%</th>
+          </tr>
+        </thead>
+        <tbody id="current-body"></tbody>
+      </table>
+      <div class="footnote">W/L/T ARE CATEGORY RESULTS, NOT WEEKLY MATCHUP WINS.</div>
+    </section>
+
+    <section id="alltime-view" class="view">
+      <div class="hint">2021-2027 REGULAR-SEASON CATEGORY RESULTS // CURRENT SEASON INCLUDED</div>
+      <table id="alltime-table" hidden>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>MANAGER</th>
+            <th>W</th>
+            <th>L</th>
+            <th>T</th>
+            <th>WIN%</th>
+            <th>SEASONS</th>
+            <th>TITLES</th>
+          </tr>
+        </thead>
+        <tbody id="alltime-body"></tbody>
+      </table>
+    </section>
+
+    <section id="championships-view" class="view">
+      <div class="hint">COMPLETED SEASONS ONLY</div>
+      <div id="champions" class="champ-grid"></div>
+    </section>
+
+    <section id="archive-view" class="view">
+      <div class="archive-controls">
+        <label for="season-select">SEASON</label>
+        <select id="season-select"></select>
+      </div>
+      <table id="archive-table" hidden>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>TEAM</th>
+            <th>MANAGER</th>
+            <th>W</th>
+            <th>L</th>
+            <th>T</th>
+            <th>WIN%</th>
+            <th>FINISH</th>
+          </tr>
+        </thead>
+        <tbody id="archive-body"></tbody>
+      </table>
+    </section>
+
+    <section id="records-view" class="view">
+      <div class="hint">TOP THREE PER CATEGORY // COMPLETED SEASONS + CURRENT ALL-TIME TOTALS</div>
+      <div id="record-book" class="record-book"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+const LEAGUE_ID = "1739849790";
+const CURRENT_SEASON = 2027;
+const FIRST_SEASON = 2021;
+const SEASONS = [2021, 2022, 2023, 2024, 2025, 2026, 2027];
+
+const SHORT_NAMES = {
+  "Doug Moss":"Doug",
+  "David Moss":"David",
+  "cameron williams":"Cam",
+  "Cameron Williams":"Cam",
+  "Carter Stone":"Carter",
+  "Ben Parnes":"Ben",
+  "Geoffrey Gund":"Geoff",
+  "Andrew Roth":"Roth",
+  "Sam Propper":"Timmy",
+  "Alex Marton":"Alex",
+  "Brian Frank":"Brian",
+  "Morgan Ritchie":"Morgan",
+  "Matthew Belsito":"Belsito"
+};
+
+const FALLBACK_CURRENT = [
+  {team:"C-Stone Pwn Home",manager:"Carter",wins:14,losses:4,ties:0},
+  {team:"Team Belsito",manager:"Belsito",wins:10,losses:6,ties:2},
+  {team:"Robert Moses Is Moody",manager:"Ben",wins:11,losses:7,ties:0},
+  {team:"Bol Bol Bordello",manager:"Doug",wins:10,losses:8,ties:0},
+  {team:"Grayson Frankie",manager:"David",wins:9,losses:8,ties:1},
+  {team:"Champagne Cam Payne",manager:"Roth",wins:9,losses:9,ties:0},
+  {team:"LaMarc Gasoldridge",manager:"Geoff",wins:8,losses:9,ties:1},
+  {team:"Sam's Smart Team",manager:"Timmy",wins:8,losses:10,ties:0},
+  {team:"The Djcks from French Lick",manager:"Morgan",wins:7,losses:11,ties:0},
+  {team:"Gnarlyballs",manager:"Brian",wins:7,losses:11,ties:0},
+  {team:"I was saying Boo-Arnes",manager:"Alex",wins:6,losses:11,ties:1},
+  {team:"Kon Air",manager:"Cam",wins:6,losses:11,ties:1}
+];
+
+let archive = {};
+let currentRows = [];
+let allTimeRows = [];
+
+function managerName(member) {
+  if (!member) return "Unknown";
+  const full = ((member.firstName || "") + " " + (member.lastName || "")).trim() ||
+    member.displayName || "Unknown";
+  return SHORT_NAMES[full] || full;
+}
+
+function teamName(team) {
+  return team.name || ((team.location || "") + " " + (team.nickname || "")).trim() || "Unnamed Team";
+}
+
+function pct(w, l, t) {
+  const games = w + l + t;
+  return games ? ((w + t * 0.5) / games) * 100 : 0;
+}
+
+function ordinal(n) {
+  const value = Number(n);
+  if (!value) return "—";
+  const mod100 = value % 100;
+  if (mod100 >= 11 && mod100 <= 13) return value + "th";
+  if (value % 10 === 1) return value + "st";
+  if (value % 10 === 2) return value + "nd";
+  if (value % 10 === 3) return value + "rd";
+  return value + "th";
+}
+
+function seasonUrl(year) {
+  return "https://lm-api-reads.fantasy.espn.com/apis/v3/games/fba/seasons/" +
+    year + "/segments/0/leagues/" + LEAGUE_ID +
+    "?view=mTeam&view=mSettings&view=mMatchup&view=mStandings";
+}
+
+async function fetchSeason(year) {
+  const response = await fetch(seasonUrl(year));
+  if (!response.ok) throw new Error("ESPN " + year + ": HTTP " + response.status);
+  return response.json();
+}
+
+function normalizeSeason(year, data) {
+  const members = {};
+  (data.members || []).forEach(function(member) {
+    members[member.id] = member;
+  });
+
+  return (data.teams || []).map(function(team) {
+    const ownerId = team.primaryOwner || (team.owners && team.owners[0]);
+    const overall = (team.record && team.record.overall) || {};
+    const w = Number(overall.wins || 0);
+    const l = Number(overall.losses || 0);
+    const t = Number(overall.ties || 0);
+
+    return {
+      year:year,
+      team:teamName(team),
+      manager:managerName(members[ownerId]),
+      wins:w,
+      losses:l,
+      ties:t,
+      winPct:pct(w,l,t),
+      finish:Number(team.rankCalculatedFinal || 0),
+      seed:Number(team.playoffSeed || 0)
+    };
+  });
+}
+
+function currentFallbackRows() {
+  return FALLBACK_CURRENT.map(function(row) {
+    return Object.assign({}, row, {
+      year:CURRENT_SEASON,
+      winPct:pct(row.wins,row.losses,row.ties),
+      finish:0
+    });
+  });
+}
+
+function sortStandings(rows) {
+  return rows.slice().sort(function(a,b) {
+    if (b.winPct !== a.winPct) return b.winPct - a.winPct;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    if (a.losses !== b.losses) return a.losses - b.losses;
+    return a.team.localeCompare(b.team);
+  });
+}
+
+function renderCurrent(live) {
+  const body = document.getElementById("current-body");
+  body.innerHTML = "";
+
+  sortStandings(currentRows).forEach(function(row,index) {
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      "<td>" + (index + 1) + "</td>" +
+      '<td class="team">' + row.team + "</td>" +
+      '<td class="manager">' + row.manager + "</td>" +
+      "<td>" + row.wins + "</td>" +
+      "<td>" + row.losses + "</td>" +
+      "<td>" + row.ties + "</td>" +
+      "<td>" + row.winPct.toFixed(1) + "%</td>";
+    body.appendChild(tr);
+  });
+
+  document.getElementById("current-loading").hidden = true;
+  document.getElementById("current-table").hidden = false;
+  document.getElementById("live-badge").textContent = live ? "// LIVE" : "// SNAPSHOT";
+}
+
+function buildAllTime() {
+  const map = {};
+
+  Object.keys(archive).forEach(function(yearKey) {
+    archive[yearKey].forEach(function(row) {
+      if (!map[row.manager]) {
+        map[row.manager] = {
+          manager:row.manager,
+          wins:0,
+          losses:0,
+          ties:0,
+          seasons:0,
+          titles:0,
+          winPct:0
+        };
+      }
+
+      const item = map[row.manager];
+      item.wins += row.wins;
+      item.losses += row.losses;
+      item.ties += row.ties;
+      item.seasons++;
+
+      if (Number(yearKey) < CURRENT_SEASON && row.finish === 1) {
+        item.titles++;
+      }
+    });
+  });
+
+  allTimeRows = Object.values(map).map(function(row) {
+    row.winPct = pct(row.wins,row.losses,row.ties);
+    return row;
+  }).sort(function(a,b) {
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    return b.winPct - a.winPct;
+  });
+
+  const body = document.getElementById("alltime-body");
+  body.innerHTML = "";
+
+  allTimeRows.forEach(function(row,index) {
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      "<td>" + (index + 1) + "</td>" +
+      '<td class="team">' + row.manager + "</td>" +
+      "<td>" + row.wins + "</td>" +
+      "<td>" + row.losses + "</td>" +
+      "<td>" + row.ties + "</td>" +
+      "<td>" + row.winPct.toFixed(1) + "%</td>" +
+      "<td>" + row.seasons + "</td>" +
+      '<td class="title-count">' + row.titles + "</td>";
+    body.appendChild(tr);
+  });
+
+  document.getElementById("alltime-table").hidden = false;
+}
+
+function renderChampions() {
+  const box = document.getElementById("champions");
+  box.innerHTML = "";
+
+  const champions = [];
+
+  SEASONS.filter(function(year) { return year < CURRENT_SEASON; })
+    .forEach(function(year) {
+      const rows = archive[year] || [];
+      const champion = rows.find(function(row) { return row.finish === 1; });
+      if (champion) champions.push(champion);
+    });
+
+  champions.sort(function(a,b) { return b.year - a.year; });
+
+  if (!champions.length) {
+    box.innerHTML = '<div class="error">CHAMPIONSHIP HISTORY UNAVAILABLE.</div>';
+    return;
+  }
+
+  champions.forEach(function(row) {
+    const div = document.createElement("div");
+    div.className = "champ-row";
+    div.innerHTML =
+      '<div class="year">' + row.year + "</div>" +
+      '<div class="champ-manager">' + row.manager + "</div>" +
+      '<div class="champ-team">' + row.team + "</div>" +
+      '<div class="champ-record">' + row.wins + "-" + row.losses +
+        (row.ties ? "-" + row.ties : "") + "</div>";
+    box.appendChild(div);
+  });
+}
+
+function renderArchive(year) {
+  const rows = sortStandings(archive[year] || []);
+  const body = document.getElementById("archive-body");
+  body.innerHTML = "";
+
+  rows.forEach(function(row,index) {
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      "<td>" + (index + 1) + "</td>" +
+      '<td class="team">' + row.team + "</td>" +
+      '<td class="manager">' + row.manager + "</td>" +
+      "<td>" + row.wins + "</td>" +
+      "<td>" + row.losses + "</td>" +
+      "<td>" + row.ties + "</td>" +
+      "<td>" + row.winPct.toFixed(1) + "%</td>" +
+      "<td>" + (row.finish ? ordinal(row.finish) : "—") + "</td>";
+    body.appendChild(tr);
+  });
+
+  document.getElementById("archive-table").hidden = rows.length === 0;
+}
+
+function recordGroup(title, entries, valueFn, detailFn) {
+  const group = document.createElement("div");
+  group.className = "record-group";
+
+  const label = document.createElement("div");
+  label.className = "record-title";
+  label.textContent = title;
+  group.appendChild(label);
+
+  const list = document.createElement("div");
+
+  entries.forEach(function(entry,index) {
+    const row = document.createElement("div");
+    row.className = "record-entry" + (index ? " dimmed" : "");
+    row.innerHTML =
+      '<div class="record-rank">#' + (index + 1) + "</div>" +
+      '<div class="record-value">' + valueFn(entry) + "</div>" +
+      '<div class="record-detail">' + detailFn(entry) + "</div>";
+    list.appendChild(row);
+  });
+
+  group.appendChild(list);
+  return group;
+}
+
+function renderRecords() {
+  const box = document.getElementById("record-book");
+  box.innerHTML = "";
+
+  const completed = [];
+  SEASONS.filter(function(year) { return year < CURRENT_SEASON; })
+    .forEach(function(year) {
+      (archive[year] || []).forEach(function(row) { completed.push(row); });
+    });
+
+  const mostWins = completed.slice()
+    .sort(function(a,b) { return b.wins - a.wins || b.winPct - a.winPct; })
+    .slice(0,3);
+
+  const bestPct = completed.filter(function(row) {
+    return row.wins + row.losses + row.ties > 0;
+  }).slice().sort(function(a,b) {
+    return b.winPct - a.winPct || b.wins - a.wins;
+  }).slice(0,3);
+
+  const titleLeaders = allTimeRows.slice()
+    .sort(function(a,b) { return b.titles - a.titles || b.wins - a.wins; })
+    .slice(0,3);
+
+  const allTimeWins = allTimeRows.slice()
+    .sort(function(a,b) { return b.wins - a.wins || b.winPct - a.winPct; })
+    .slice(0,3);
+
+  box.appendChild(recordGroup(
+    "MOST CATEGORY WINS // SEASON",
+    mostWins,
+    function(row) { return row.wins; },
+    function(row) { return row.manager + " // " + row.year + " // " + row.team; }
+  ));
+
+  box.appendChild(recordGroup(
+    "BEST WIN% // SEASON",
+    bestPct,
+    function(row) { return row.winPct.toFixed(1) + "%"; },
+    function(row) { return row.manager + " // " + row.year + " // " + row.wins + "-" + row.losses + "-" + row.ties; }
+  ));
+
+  box.appendChild(recordGroup(
+    "MOST CHAMPIONSHIPS",
+    titleLeaders,
+    function(row) { return row.titles; },
+    function(row) { return row.manager + " // " + row.seasons + " SEASONS"; }
+  ));
+
+  box.appendChild(recordGroup(
+    "MOST ALL-TIME CATEGORY WINS",
+    allTimeWins,
+    function(row) { return row.wins; },
+    function(row) { return row.manager + " // " + row.winPct.toFixed(1) + "%"; }
+  ));
+}
+
+function setupArchiveSelector() {
+  const select = document.getElementById("season-select");
+  select.innerHTML = "";
+
+  SEASONS.slice().reverse().forEach(function(year) {
+    const option = document.createElement("option");
+    option.value = year;
+    option.textContent = year === CURRENT_SEASON ? "2026-27 (LIVE)" : String(year);
+    select.appendChild(option);
+  });
+
+  select.value = CURRENT_SEASON;
+  select.addEventListener("change", function() {
+    renderArchive(Number(select.value));
+  });
+}
+
+async function build() {
+  let liveCurrent = false;
+  const failures = [];
+
+  const results = await Promise.all(
+    SEASONS.map(async function(year) {
+      try {
+        const data = await fetchSeason(year);
+        return {year:year,rows:normalizeSeason(year,data)};
+      } catch (error) {
+        failures.push(year);
+        return {year:year,rows:[]};
+      }
+    })
+  );
+
+  results.forEach(function(result) {
+    archive[result.year] = result.rows;
+  });
+
+  if (archive[CURRENT_SEASON] && archive[CURRENT_SEASON].length) {
+    currentRows = archive[CURRENT_SEASON];
+    liveCurrent = true;
+  } else {
+    currentRows = currentFallbackRows();
+    archive[CURRENT_SEASON] = currentRows;
+  }
+
+  renderCurrent(liveCurrent);
+  buildAllTime();
+  renderChampions();
+  setupArchiveSelector();
+  renderArchive(CURRENT_SEASON);
+  renderRecords();
+
+  if (failures.length) {
+    console.warn("ESPN archive fetch failed for:", failures);
+  }
+}
+
+document.querySelectorAll(".nav-btn").forEach(function(button) {
+  button.addEventListener("click", function() {
+    document.querySelectorAll(".nav-btn").forEach(function(item) {
+      item.classList.remove("active");
+    });
+    document.querySelectorAll(".view").forEach(function(view) {
+      view.classList.remove("active");
+    });
+
+    button.classList.add("active");
+    document.getElementById(button.dataset.view).classList.add("active");
+    document.getElementById("view-title").textContent = button.dataset.title;
+  });
+});
+
+const themeToggle = document.getElementById("theme-toggle");
+
+function applyTheme(theme) {
+  const pink = theme === "pink";
+  document.documentElement.classList.toggle("pink", pink);
+  themeToggle.textContent = pink ? "[ DARK ]" : "[ PINK ]";
+}
+
+applyTheme("dark");
+
+themeToggle.addEventListener("click", function() {
+  applyTheme(document.documentElement.classList.contains("pink") ? "dark" : "pink");
+});
+
+build().catch(function(error) {
+  document.getElementById("current-loading").className = "error";
+  document.getElementById("current-loading").textContent =
+    "BALLZAGNA FAILED TO LOAD.\n" + error.message;
+});
+</script>
+</body>
+</html>
