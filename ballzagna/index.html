@@ -428,6 +428,136 @@
   .record-value { color:var(--strong); font-weight:800; }
   .record-detail { color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
+  .h2h-wrap {
+    width:100%;
+    overflow:auto;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--panel);
+  }
+
+  .h2h-matrix {
+    width:max-content;
+    min-width:100%;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    border-collapse:separate;
+    border-spacing:0;
+    font-size:11px;
+  }
+
+  .h2h-matrix th,
+  .h2h-matrix td {
+    width:82px;
+    min-width:82px;
+    max-width:82px;
+    height:52px;
+    padding:7px 8px;
+    text-align:center;
+    border-right:1px solid var(--row);
+    border-bottom:1px solid var(--row);
+    white-space:normal;
+  }
+
+  .h2h-matrix thead th {
+    position:sticky;
+    top:0;
+    z-index:4;
+    background:var(--panel-2);
+    color:var(--strong);
+    font-size:10px;
+    line-height:1.15;
+    text-transform:none;
+    letter-spacing:0;
+  }
+
+  .h2h-matrix .h2h-corner {
+    position:sticky;
+    left:0;
+    z-index:6;
+    width:120px;
+    min-width:120px;
+    max-width:120px;
+    text-align:left;
+    color:var(--accent);
+  }
+
+  .h2h-matrix .h2h-rowhead {
+    position:sticky;
+    left:0;
+    z-index:3;
+    width:120px;
+    min-width:120px;
+    max-width:120px;
+    text-align:left;
+    background:var(--panel-2);
+    color:var(--strong);
+    font-weight:800;
+  }
+
+  .h2h-matrix .former {
+    color:#706d69;
+    opacity:.62;
+  }
+
+  .h2h-matrix td.diagonal {
+    background:#111114;
+    color:var(--dim);
+  }
+
+  .h2h-matrix td.h2h-win {
+    color:var(--accent-soft);
+    background:rgba(255,106,0,.08);
+    font-weight:800;
+  }
+
+  .h2h-matrix td.h2h-even {
+    color:var(--strong);
+    font-weight:750;
+  }
+
+  .h2h-matrix td.h2h-loss {
+    color:#77736f;
+  }
+
+  .h2h-cell-record {
+    display:block;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .h2h-cell-meetings {
+    display:block;
+    margin-top:3px;
+    color:var(--dim);
+    font-size:9px;
+    font-weight:650;
+  }
+
+  .h2h-legend {
+    display:flex;
+    gap:18px;
+    flex-wrap:wrap;
+    margin-top:10px;
+    color:var(--dim);
+    font-size:10px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+  }
+
+  .h2h-dot {
+    display:inline-block;
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    margin-right:5px;
+  }
+
+  .h2h-dot.winning { background:var(--accent); }
+  .h2h-dot.even { background:var(--strong); }
+  .h2h-dot.losing { background:#5f5c59; }
+
   @media (max-width:850px) {
     .app { grid-template-columns:1fr; }
     .sidebar {
@@ -468,6 +598,7 @@
       <button class="nav-btn" data-view="championships-view" data-title="Championships">Championships</button>
       <button class="nav-btn" data-view="archive-view" data-title="Season Archive">Season Archive</button>
       <button class="nav-btn" data-view="records-view" data-title="Record Book">Record Book</button>
+      <button class="nav-btn" data-view="h2h-view" data-title="Head-to-Head">Head-to-Head</button>
     </nav>
 
     <div class="sidebar-meta">
@@ -531,6 +662,18 @@
     <section id="records-view" class="view">
       <div class="hint">TOP THREE PER CATEGORY // COMPLETED SEASONS + CURRENT ALL-TIME TOTALS</div>
       <div id="record-book" class="record-book"></div>
+    </section>
+
+    <section id="h2h-view" class="view">
+      <div class="hint">ALL ESPN-SCORED MATCHUPS // CELL = ROW MANAGER'S CATEGORY W-L-T VS COLUMN MANAGER</div>
+      <div class="h2h-wrap">
+        <table id="h2h-matrix" class="h2h-matrix" aria-label="Ballzagna head-to-head matrix"></table>
+      </div>
+      <div class="h2h-legend">
+        <span><i class="h2h-dot winning"></i> winning record</span>
+        <span><i class="h2h-dot even"></i> even record</span>
+        <span><i class="h2h-dot losing"></i> losing record</span>
+      </div>
     </section>
   </main>
 </div>
@@ -979,10 +1122,6 @@ function renderRecords() {
     return b.winPct - a.winPct || b.wins - a.wins;
   }).slice(0,3);
 
-  const titleLeaders = allTimeRows.slice()
-    .sort(function(a,b) { return b.titles - a.titles || b.wins - a.wins; })
-    .slice(0,3);
-
   const allTimeWins = allTimeRows.slice()
     .sort(function(a,b) { return b.wins - a.wins || b.winPct - a.winPct; })
     .slice(0,3);
@@ -1015,18 +1154,155 @@ function renderRecords() {
   ));
 
   box.appendChild(recordGroup(
-    "MOST CHAMPIONSHIPS",
-    titleLeaders,
-    function(row) { return row.titles; },
-    function(row) { return row.manager + " // " + row.seasons + " SEASONS"; }
-  ));
-
-  box.appendChild(recordGroup(
     "MOST ALL-TIME CATEGORY WINS",
     allTimeWins,
     function(row) { return row.wins; },
     function(row) { return row.manager + " // " + row.winPct.toFixed(1) + "%"; }
   ));
+}
+
+function buildHeadToHeadMatrix() {
+  const matrix = {};
+  const managersSeen = new Set();
+
+  function ensurePair(a,b) {
+    if (!matrix[a]) matrix[a] = {};
+    if (!matrix[a][b]) {
+      matrix[a][b] = { wins:0, losses:0, ties:0, meetings:0, years:[] };
+    }
+    return matrix[a][b];
+  }
+
+  SEASONS.forEach(function(year) {
+    const raw = seasonData[year] || {};
+    const rows = archive[year] || [];
+    const teamMap = {};
+
+    rows.forEach(function(row) {
+      teamMap[row.teamId] = row.manager;
+      if (row.manager && row.manager !== "Unknown") managersSeen.add(row.manager);
+    });
+
+    (raw.schedule || []).forEach(function(matchup) {
+      const home = matchup.home;
+      const away = matchup.away;
+      if (!home || !away) return;
+
+      const homeManager = teamMap[home.teamId];
+      const awayManager = teamMap[away.teamId];
+      if (!homeManager || !awayManager || homeManager === "Unknown" || awayManager === "Unknown") return;
+
+      const hs = home.cumulativeScore || {};
+      const as = away.cumulativeScore || {};
+      const hW = Number(hs.wins || 0);
+      const hL = Number(hs.losses || 0);
+      const hT = Number(hs.ties || 0);
+      const aW = Number(as.wins || 0);
+      const aL = Number(as.losses || 0);
+      const aT = Number(as.ties || 0);
+
+      if ((hW + hL + hT + aW + aL + aT) === 0) return;
+
+      managersSeen.add(homeManager);
+      managersSeen.add(awayManager);
+
+      const homeRecord = ensurePair(homeManager, awayManager);
+      homeRecord.wins += hW;
+      homeRecord.losses += hL;
+      homeRecord.ties += hT;
+      homeRecord.meetings++;
+      if (!homeRecord.years.includes(year)) homeRecord.years.push(year);
+
+      const awayRecord = ensurePair(awayManager, homeManager);
+      awayRecord.wins += aW;
+      awayRecord.losses += aL;
+      awayRecord.ties += aT;
+      awayRecord.meetings++;
+      if (!awayRecord.years.includes(year)) awayRecord.years.push(year);
+    });
+  });
+
+  const currentManagers = new Set(
+    (archive[CURRENT_SEASON] || []).map(function(row) { return row.manager; })
+  );
+
+  const currentNames = Array.from(managersSeen)
+    .filter(function(name) { return currentManagers.has(name); })
+    .sort(function(a,b) { return a.localeCompare(b); });
+
+  const formerNames = Array.from(managersSeen)
+    .filter(function(name) { return !currentManagers.has(name); })
+    .sort(function(a,b) { return a.localeCompare(b); });
+
+  const names = currentNames.concat(formerNames);
+  const table = document.getElementById("h2h-matrix");
+  table.innerHTML = "";
+
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  const corner = document.createElement("th");
+  corner.className = "h2h-corner";
+  corner.textContent = "ROW ↓ / VS →";
+  headerRow.appendChild(corner);
+
+  names.forEach(function(name) {
+    const th = document.createElement("th");
+    th.textContent = name;
+    if (!currentManagers.has(name)) th.classList.add("former");
+    headerRow.appendChild(th);
+  });
+
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+
+  names.forEach(function(rowName) {
+    const tr = document.createElement("tr");
+    const rowHead = document.createElement("th");
+    rowHead.className = "h2h-rowhead";
+    rowHead.textContent = rowName;
+    if (!currentManagers.has(rowName)) rowHead.classList.add("former");
+    tr.appendChild(rowHead);
+
+    names.forEach(function(colName) {
+      const td = document.createElement("td");
+
+      if (rowName === colName) {
+        td.className = "diagonal";
+        td.textContent = "—";
+      } else {
+        const record = matrix[rowName] && matrix[rowName][colName];
+
+        if (!record) {
+          td.className = "h2h-loss";
+          td.innerHTML = '<span class="h2h-cell-record">—</span><span class="h2h-cell-meetings">0 meetings</span>';
+        } else {
+          const games = record.wins + record.losses + record.ties;
+          const winPct = games ? (record.wins + record.ties * 0.5) / games : 0.5;
+          td.className = winPct > 0.5 ? "h2h-win" : (winPct < 0.5 ? "h2h-loss" : "h2h-even");
+
+          const years = record.years.slice().sort(function(a,b) { return a-b; });
+          const yearText = years.length === 1 ? years[0] : years[0] + "–" + years[years.length - 1];
+
+          td.innerHTML =
+            '<span class="h2h-cell-record">' + record.wins + "-" + record.losses + "-" + record.ties + "</span>" +
+            '<span class="h2h-cell-meetings">' + record.meetings + (record.meetings === 1 ? " meeting" : " meetings") + "</span>";
+          td.title = rowName + " vs " + colName + " // " + yearText;
+        }
+      }
+
+      if (!currentManagers.has(rowName) || !currentManagers.has(colName)) {
+        td.classList.add("former");
+      }
+
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
 }
 
 function setupArchiveSelector() {
@@ -1080,6 +1356,7 @@ async function build() {
   setupArchiveSelector();
   renderArchive(CURRENT_SEASON);
   renderRecords();
+  buildHeadToHeadMatrix();
 
   if (failures.length) {
     console.warn("ESPN archive fetch failed for:", failures);
